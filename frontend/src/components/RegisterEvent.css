@@ -1,0 +1,305 @@
+/* =========================
+   RegisterEvent.css
+   Updated: Visual corrections + dropdown dark mode + lighter navy form
+   ========================= */
+
+/* --- Base / page root --- */
+.re-root {
+  position: relative;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #e6eef8;
+  overflow-x: hidden;
+  background: #0b0b12;
+}
+
+/* --- Background gradient --- */
+.re-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #111827 40%, #2b0d4a 100%);
+}
+
+/* --- Radial overlay matching dashboard --- */
+.re-bg-radial {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image:
+    radial-gradient(circle at 40% 30%, rgba(99,102,241,0.20), transparent 16%),
+    radial-gradient(circle at 85% 80%, rgba(168,85,247,0.14), transparent 10%);
+  background-size: 120% 120%;
+  animation: re-radialShift 18s linear infinite alternate;
+  opacity: 0.9;
+}
+@keyframes re-radialShift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 100% 100%, 0% 0%; }
+}
+
+/* --- NAV HEADER --- */
+.re-nav {
+  position: relative;
+  z-index: 10;
+  padding: 18px 28px;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.re-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #c9d6ff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: 0.2s ease;
+}
+
+.re-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.04);
+  transform: translateX(-3px);
+}
+
+/* HEADER LOGO + TITLE */
+.re-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.re-logo {
+  width: 72px;       /* Option B medium size */
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+}
+
+.re-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.re-subtitle {
+  margin: 2px 0 0;
+  color: #9fb0d8;
+  font-size: 14px;
+}
+
+/* MAIN CONTAINER */
+.re-container {
+  position: relative;
+  z-index: 5;
+  max-width: 1080px;
+  margin: 30px auto 80px;
+  padding: 0 22px;
+}
+
+/* --- CARD --- */
+.re-card {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 20, 35, 0.62),
+    rgba(14, 16, 30, 0.76)
+  );
+  border-radius: 14px;
+  padding: 26px;
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.55);
+  transition: 0.25s ease;
+}
+
+.re-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 26px 48px rgba(99,102,241,0.12);
+}
+
+/* TITLES */
+.re-card-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.re-card-sub {
+  margin: 6px 0 16px;
+  color: #aebbd6;
+}
+
+/* GRID */
+.re-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 720px) {
+  .re-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* FIELDS */
+.re-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.re-field label {
+  font-size: 14px;
+  color: #cfddff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* INPUTS — FIXED: Lighter navy instead of black */
+.re-field input,
+.re-field select,
+.re-field textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #dbe7ff;
+
+  background: linear-gradient(
+    180deg,
+    rgba(10, 12, 25, 0.55),
+    rgba(12, 14, 28, 0.65)
+  );
+
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: 0.2s ease;
+}
+
+.re-field input:focus,
+.re-field select:focus,
+.re-field textarea:focus {
+  border-color: rgba(88, 147, 255, 0.45);
+  box-shadow: 0 0 14px rgba(88,147,255,0.2);
+}
+
+/* ---- FIX: DROPDOWN DARK MODE (removes white menu) ---- */
+.re-field select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.12) 50%),
+                    linear-gradient(135deg, rgba(255,255,255,0.12) 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.re-field select option {
+  background: rgba(15,18,32,0.95) !important;
+  color: #e8f0ff;
+  padding: 10px;
+}
+
+/* CUSTOM TIME RANGE */
+.re-custom-time {
+  display: flex;
+  gap: 12px;
+}
+
+.re-to {
+  color: #aebbd6;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+/* --- BUTTON ROW --- */
+.re-btn-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.re-submit {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  background: linear-gradient(90deg, #5b21b6, #9b5cf6, #f43f93);
+  color: white;
+  box-shadow: 0 14px 32px rgba(132,0,255,0.22);
+  transition: 0.2s ease;
+}
+
+.re-submit:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.re-clear {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(18, 20, 30, 0.5);
+  color: #cdd7f9;
+  border: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.re-clear:hover {
+  transform: translateY(-2px);
+  background: rgba(22,22,30,0.65);
+}
+
+/* --- LAST REGISTRATION CARD --- */
+.re-last-card {
+  margin-top: 26px;
+  padding: 20px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(6,45,38,0.55), rgba(6,65,50,0.6));
+  border: 1px solid rgba(50,200,150,0.16);
+  box-shadow: 0 10px 32px rgba(0,255,180,0.10);
+}
+
+.re-last-card h2 {
+  margin: 0 0 12px;
+  color: #d1ffe9;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.re-last-icon {
+  color: #34d399;
+}
+
+.re-last-grid {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 720px) {
+  .re-last-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.re-last-card strong {
+  color: #34d399;
+}

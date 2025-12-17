@@ -1,0 +1,309 @@
+/* src/styles/BookingStatus.css
+   Converted from Tailwind -> pure CSS.
+   Preserve theme, animations and layout from original.
+*/
+
+/* ----- Root & page background ----- */
+.bs-root {
+  position: relative;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #e6eef8;
+  overflow-x: hidden;
+  background: #0b0b12;
+}
+
+/* gradient background (full) */
+.bs-bg-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #111827 35%, #2b0d4a 100%);
+}
+
+/* radial animated overlay */
+.bs-bg-radial {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image:
+    radial-gradient(circle at 40% 30%, rgba(99,102,241,0.18), transparent 18%),
+    radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 12%);
+  background-size: 120% 120%;
+  animation: bs-radialShift 20s linear infinite alternate;
+  opacity: 0.9;
+}
+@keyframes bs-radialShift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 100% 100%, 0% 0%; }
+}
+
+/* particles */
+.bs-particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.bs-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(99,102,241,0.22);
+  box-shadow: 0 0 8px rgba(99,102,241,0.12);
+  transform: translateY(0);
+  animation-name: bs-particleFloat;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+@keyframes bs-particleFloat {
+  0% { transform: translateY(0) scale(1); opacity: 0.25; }
+  50% { transform: translateY(-30px) scale(1.25); opacity: 0.9; }
+  100% { transform: translateY(0) scale(1); opacity: 0.25; }
+}
+
+/* ----- Header ----- */
+.bs-header {
+  position: relative;
+  z-index: 10;
+  padding: 18px 24px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.06), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+}
+.bs-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+.bs-header-left {
+  display:flex;
+  align-items:center;
+  gap: 16px;
+}
+.bs-back {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  background: transparent;
+  border: none;
+  color: #c9d6ff;
+  cursor: pointer;
+  transition: transform .18s ease, background .12s ease, color .12s ease;
+}
+.bs-back:hover { transform: translateX(-4px); color: #fff; background: rgba(255,255,255,0.02); }
+
+.bs-logo-title {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.bs-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+}
+.bs-page-title {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 600;
+}
+.bs-page-sub {
+  margin: 2px 0 0;
+  color: #9fb0d8;
+  font-size: 13px;
+}
+
+/* ----- Main container ----- */
+.bs-main { position: relative; z-index: 5; padding: 28px 20px 80px; display:flex; justify-content:center; }
+.bs-container { max-width: 1100px; width:100%; }
+
+/* ----- Admin contacts card ----- */
+.bs-admin {
+  margin-bottom: 20px;
+}
+.bs-admin-card {
+  display:flex;
+  gap:16px;
+  align-items:center;
+  background: linear-gradient(90deg, rgba(249,115,22,0.03), rgba(250,204,21,0.02));
+  border: 1px solid rgba(249,115,22,0.06);
+  padding: 12px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
+.bs-admin-left { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.bs-admin-icon { width:18px; height:18px; color: #f59e0b; }
+.bs-admin-label { color:#ffd9b2; font-weight:600; }
+
+/* admin contacts list */
+.bs-admin-contacts { display:grid; grid-template-columns: repeat(1, minmax(0,1fr)); gap:8px; width:100%; }
+@media (min-width: 640px) {
+  .bs-admin-contacts { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+.bs-admin-item {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  background: rgba(12,14,20,0.6);
+  padding:6px 8px;
+  border-radius:8px;
+  border: 1px solid rgba(249,115,22,0.08);
+}
+.bs-admin-name { color:#cfe0ff; font-size:13px; }
+.bs-admin-phone { color:#f59e0b; text-decoration:none; font-size:13px; }
+
+/* ----- Booking cards list ----- */
+.bs-list { display:flex; flex-direction:column; gap:16px; margin-top: 6px; }
+
+/* card */
+.bs-card {
+  background: linear-gradient(180deg, rgba(11,12,20,0.55), rgba(8,7,20,0.75));
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.55);
+  transition: transform .2s ease, box-shadow .2s ease;
+  overflow: hidden;
+}
+.bs-card-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:10px;
+}
+.bs-card-title {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+  color:#fff;
+  font-size:16px;
+}
+.bs-card-sub { color:#9fb0d8; font-size:13px; margin-top:6px; }
+
+/* status badge (variants via class names applied in JSX) */
+.bs-badge {
+  padding:6px 10px;
+  border-radius:999px;
+  color:#fff;
+  font-weight:700;
+  font-size:13px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.4);
+}
+/* statuses */
+.status-confirmed { background: linear-gradient(90deg,#10b981,#059669); }
+.status-pending { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+.status-rejected { background: linear-gradient(90deg,#ef4444,#f97316); }
+.status-changed { background: linear-gradient(90deg,#7c3aed,#9f7aea); }
+
+/* card body grid */
+.bs-card-body { margin-top: 12px; }
+.bs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 900px) {
+  .bs-grid { grid-template-columns: 2fr 1fr; align-items:start; }
+}
+
+/* left info column */
+.bs-info { display:flex; flex-direction:column; gap:12px; }
+.bs-info-row { display:flex; gap:12px; align-items:flex-start; }
+.bs-info-icon { width:18px; height:18px; color:#9fb0d8; flex-shrink:0; }
+.bs-info-label { font-size:12px; color:#b7c4e1; }
+.bs-info-value { color:#ffffff; font-weight:600; margin-top:2px; }
+
+/* aside column (venue change, rejection) */
+.bs-aside { display:flex; flex-direction:column; gap:12px; }
+
+/* venue change box */
+.bs-venue-change {
+  background: linear-gradient(180deg, rgba(64, 32, 128, 0.12), rgba(48, 12, 72, 0.08));
+  padding:12px;
+  border-radius:10px;
+  border: 1px solid rgba(124,58,237,0.08);
+}
+.bs-venue-change-head { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+.bs-venue-info { color:#d8c9ff; }
+.bs-venue-original { color:#ffcad4; text-decoration:line-through; margin-bottom:6px; }
+.bs-venue-new { color:#b7f5d4; margin-bottom:6px; }
+.bs-venue-meta { color:#cdb8ff; font-size:13px; }
+
+/* rejection */
+.bs-rejected {
+  background: linear-gradient(180deg, rgba(88, 12, 12, 0.12), rgba(72, 6, 6, 0.06));
+  padding:12px;
+  border-radius:10px;
+  border: 1px solid rgba(239,68,68,0.08);
+}
+.bs-rejected-head { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+.bs-rejected-text { color:#ffd6d6; margin-bottom:8px; }
+.bs-rejected-note { color:#ffc9c9; font-size:13px; font-style:italic; }
+
+/* icons color helpers */
+.bs-icon.indigo { color:#60a5fa; }
+.bs-icon.purple { color:#c084fc; }
+.bs-icon.red { color:#fb7185; }
+
+/* ----- Summary cards ----- */
+.bs-summary { margin-top:20px; }
+.bs-summary-grid {
+  display:grid;
+  gap:12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .bs-summary-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.bs-stat-card {
+  padding: 14px;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(10,12,25,0.45), rgba(6,8,18,0.6));
+  border: 1px solid rgba(255,255,255,0.03);
+  text-align:center;
+}
+.stat-title { color:#b7c4e1; font-size:13px; margin-bottom:8px; }
+.stat-value { font-size:28px; font-weight:700; margin-top:4px; }
+
+/* color accents */
+.stat-indigo { background: linear-gradient(90deg,#312e81,#4c1d95); border: 1px solid rgba(99,102,241,0.14); box-shadow: 0 10px 30px rgba(99,102,241,0.06); }
+.stat-green { background: linear-gradient(90deg,#064e3b,#047857); border: 1px solid rgba(16,185,129,0.08); box-shadow: 0 10px 30px rgba(16,185,129,0.04); }
+.stat-yellow { background: linear-gradient(90deg,#92400e,#b45309); border: 1px solid rgba(250,204,21,0.06); box-shadow: 0 10px 30px rgba(250,204,21,0.03); }
+.stat-red { background: linear-gradient(90deg,#7f1d1d,#b91c1c); border: 1px solid rgba(239,68,68,0.06); box-shadow: 0 10px 30px rgba(239,68,68,0.03); }
+
+/* ----- Responsive tweaks ----- */
+@media (max-width: 640px) {
+  .bs-header-inner { padding: 8px 12px; gap:8px; }
+  .bs-logo { width:40px; height:40px; }
+  .bs-page-title { font-size:18px; }
+  .bs-page-sub { font-size:12px; }
+  .bs-grid { gap:10px; }
+  .bs-card { padding:12px; border-radius:10px; }
+  .bs-admin-contacts { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* small decorative touches */
+.bs-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255,255,255,0.01), transparent);
+  opacity: 0.02;
+}
+
+/* focus outline for accessibility */
+.bs-card:focus,
+.bs-stat-card:focus {
+  outline: none;
+  box-shadow: 0 10px 36px rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.18);
+}

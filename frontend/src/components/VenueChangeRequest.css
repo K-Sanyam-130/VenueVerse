@@ -1,0 +1,293 @@
+/* =============================
+   VenueChangeRequest.css
+   Matches RegisterEvent + CancelBooking theme
+============================= */
+
+.vcr-root {
+  position: relative;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  color: #e6eef8;
+  background: #0b0b12;
+  overflow-x: hidden;
+}
+
+/* BACKGROUNDS */
+.vcr-bg-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0f172a, #111827 40%, #2b0d4a 100%);
+}
+
+.vcr-bg-radial {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 40% 30%, rgba(99,102,241,0.20), transparent 16%),
+    radial-gradient(circle at 85% 80%, rgba(168,85,247,0.14), transparent 10%);
+  background-size: 120% 120%;
+  animation: vcr-radialShift 18s linear infinite alternate;
+  opacity: 0.9;
+}
+
+@keyframes vcr-radialShift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 100% 100%, 0% 0%; }
+}
+
+/* NAV */
+.vcr-nav {
+  position: relative;
+  z-index: 20;
+  padding: 18px 28px;
+  background: rgba(0,0,0,0.22);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.vcr-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #c9d6ff;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: 0.2s ease;
+}
+
+.vcr-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+  transform: translateX(-4px);
+}
+
+/* HEADER */
+.vcr-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vcr-logo {
+  width: 72px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+}
+
+.vcr-title {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.vcr-subtitle {
+  margin: 2px 0 0;
+  color: #9fb0d8;
+  font-size: 14px;
+}
+
+/* LAYOUT */
+.vcr-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 22px;
+  position: relative;
+  z-index: 5;
+}
+
+.vcr-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 900px) {
+  .vcr-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* CARD */
+.vcr-card {
+  background: linear-gradient(180deg, rgba(18,20,35,0.6), rgba(14,16,30,0.75));
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 26px;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  transition: 0.2s ease;
+}
+
+.vcr-card:hover {
+  transform: translateY(-4px);
+}
+
+/* CARD HEADERS */
+.vcr-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.vcr-card-sub {
+  color: #aebbd6;
+  margin-bottom: 16px;
+}
+
+/* FORM */
+.vcr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vcr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vcr-field label {
+  font-size: 14px;
+  color: #cfddff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* INPUTS */
+.vcr-field input,
+.vcr-field select,
+.vcr-field textarea {
+  background: rgba(10,12,20,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px;
+  border-radius: 8px;
+  color: #e5e9ff;
+  font-size: 14px;
+}
+
+.vcr-field input:disabled {
+  color: #8ca0cc;
+}
+
+/* BUTTON */
+.vcr-submit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #e86a21, #ffa133);
+  border: none;
+  color: white;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 12px 32px rgba(255,140,50,0.25);
+}
+
+.vcr-submit:hover {
+  filter: brightness(1.05);
+}
+
+/* REQUESTS LIST */
+.vcr-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vcr-request-card {
+  padding: 18px;
+  background: rgba(10,12,20,0.55);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  transition: 0.2s ease;
+}
+
+.vcr-request-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.vcr-badge-pending {
+  background: #f59e0b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: white;
+}
+
+.vcr-badge-approved {
+  background: #16a34a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: white;
+}
+
+.vcr-badge-rejected {
+  background: #dc2626;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: white;
+}
+
+.vcr-small {
+  color: #c0c7dd;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.vcr-reason {
+  color: #e3e9ff;
+  margin-top: 6px;
+}
+
+.vcr-date {
+  color: #9aa6c7;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* APPROVED / REJECTED BOXES */
+.vcr-approved-box {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(16,54,25,0.4);
+  border: 1px solid rgba(0,255,120,0.3);
+  border-radius: 8px;
+  color: #8dfcb6;
+  font-size: 13px;
+}
+
+.vcr-rejected-box {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(54,16,16,0.4);
+  border: 1px solid rgba(255,60,60,0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.vcr-reject-reason {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #ffdddd;
+}
+
+/* EMPTY STATE */
+.vcr-empty {
+  color: #b7c5e4;
+  text-align: center;
+  padding: 20px;
+}

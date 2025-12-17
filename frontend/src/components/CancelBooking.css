@@ -1,0 +1,235 @@
+/* =============================
+   CancelBooking.css
+   Same theme as RegisterEvent.css
+   Dedicated styling for Cancel Booking page
+   ============================= */
+
+/* --- ROOT CONTAINER --- */
+.cb-root {
+  position: relative;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #e6eef8;
+  overflow-x: hidden;
+  background: #0b0b12;
+}
+
+/* --- Background gradient --- */
+.cb-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #111827 40%, #2b0d4a 100%);
+}
+
+/* --- Radial animated overlay --- */
+.cb-bg-radial {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image:
+    radial-gradient(circle at 40% 30%, rgba(99,102,241,0.20), transparent 16%),
+    radial-gradient(circle at 85% 80%, rgba(168,85,247,0.14), transparent 10%);
+  background-size: 120% 120%;
+  animation: cb-radialShift 18s linear infinite alternate;
+  opacity: 0.9;
+}
+
+@keyframes cb-radialShift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  100% { background-position: 100% 100%, 0% 0%; }
+}
+
+/* --- NAV HEADER (same theme as .re-nav) --- */
+.cb-nav {
+  position: relative;
+  z-index: 10;
+  padding: 18px 28px;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Back Button */
+.cb-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #c9d6ff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: 0.2s ease;
+}
+
+.cb-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.04);
+  transform: translateX(-3px);
+}
+
+/* HEADER LOGO + TEXT */
+.cb-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cb-logo {
+  width: 72px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+}
+
+.cb-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.cb-subtitle {
+  margin: 2px 0 0;
+  color: #9fb0d8;
+  font-size: 14px;
+}
+
+/* --- MAIN LAYOUT --- */
+.cb-container {
+  position: relative;
+  z-index: 5;
+  max-width: 1180px;
+  margin: 30px auto 80px;
+  padding: 0 22px;
+}
+
+/* --- CARD (theme-matched with .re-card) --- */
+.cb-card {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 20, 35, 0.62),
+    rgba(14, 16, 30, 0.76)
+  );
+  border-radius: 14px;
+  padding: 26px;
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.55);
+  transition: 0.25s ease;
+  margin-bottom: 22px;
+}
+
+.cb-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 26px 48px rgba(99,102,241,0.12);
+}
+
+/* Titles and subtitles */
+.cb-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 14px;
+}
+
+.cb-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-booking-id {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* --- BOOKING DETAILS GRID --- */
+.cb-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.cb-detail {
+  display: flex;
+  gap: 10px;
+}
+
+.cb-detail-label {
+  color: #aebbd6;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+/* --- BADGES --- */
+.cb-badge-confirmed {
+  background: #16a34a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: white;
+  font-weight: 600;
+}
+
+.cb-badge-cancelled {
+  background: #dc2626;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: white;
+  font-weight: 600;
+}
+
+/* --- CANCEL BUTTON --- */
+.cb-cancel-btn {
+  background: #dc2626;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.cb-cancel-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+/* --- CANCELLED CARDS --- */
+.cb-card-cancelled {
+  opacity: 0.75;
+  border: 1px solid rgba(255,0,0,0.18);
+  background: linear-gradient(
+    180deg,
+    rgba(35, 10, 14, 0.45),
+    rgba(50, 5, 12, 0.6)
+  );
+}
+
+.cb-card-cancelled:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 48px rgba(255,0,0,0.15);
+}
+
+/* --- EMPTY MESSAGE --- */
+.cb-empty {
+  color: #cbd5e1;
+  font-size: 15px;
+  padding: 22px 0;
+}

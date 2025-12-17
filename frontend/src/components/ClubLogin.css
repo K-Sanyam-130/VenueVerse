@@ -1,0 +1,339 @@
+/* =============================== */
+/*       ROOT CONTAINER            */
+/* =============================== */
+.club-login-root {
+  min-height: 100vh;
+  background: #020617;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  font-family: "Inter", sans-serif;
+}
+
+/* =============================== */
+/*        BACKGROUND LAYERS        */
+/* =============================== */
+.club-bg-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, #0f172a, #1e1b4b, #2e1065);
+  z-index: 1;
+}
+
+.club-bg-radial {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(168, 85, 247, 0.18),
+    transparent 60%
+  );
+  z-index: 2;
+}
+
+/* =============================== */
+/*            PARTICLES            */
+/* =============================== */
+.club-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.club-particle {
+  width: 4px;
+  height: 4px;
+  background: rgba(168, 85, 247, 0.4);
+  position: absolute;
+  border-radius: 50%;
+  animation: floatUp 4s infinite ease-in-out;
+  opacity: 0.5;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(-18px); opacity: 0.8; }
+  100% { transform: translateY(0); opacity: 0.3; }
+}
+
+/* =============================== */
+/*            MAIN CARD            */
+/* =============================== */
+.club-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  background: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  backdrop-filter: blur(20px);
+  border-radius: 18px;
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+}
+
+/* =============================== */
+/*             HEADER              */
+/* =============================== */
+.club-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.club-back-btn {
+  padding: 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.club-back-btn:hover {
+  transform: translateX(-3px);
+  color: white;
+}
+
+.club-header-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-purple {
+  color: #c084fc;
+}
+
+.icon-indigo {
+  color: #818cf8;
+}
+
+.empty-space {
+  width: 25px;
+}
+
+/* =============================== */
+/*              BADGE              */
+/* =============================== */
+.club-badge {
+  margin: 20px auto;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.1);
+  font-size: 12px;
+  letter-spacing: 1px;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =============================== */
+/*              TITLES             */
+/* =============================== */
+.club-title {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.club-subtitle {
+  text-align: center;
+  color: #94a3b8;
+  margin-bottom: 20px;
+}
+
+/* =============================== */
+/*              FORM               */
+/* =============================== */
+.club-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: rgba(30, 41, 59, 0.55);
+  color: white;
+  outline: none;
+}
+
+.input-wrapper input::placeholder {
+  color: #64748b;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+/* =============================== */
+/*        OTP SECTION              */
+/* =============================== */
+
+.otp-btn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* OTP Buttons */
+.otp-btn {
+  flex: 1;
+  padding: 10px;
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #e9d5ff;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.otp-btn:hover {
+  background: rgba(168, 85, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+/* OTP Verified Badge */
+.otp-verified {
+  flex: 1;
+  padding: 10px;
+  background: rgba(34, 197, 94, 0.25);
+  border: 1px solid rgba(34, 197, 94, 0.65);
+  color: #4ade80;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: verifiedPop 0.4s ease;
+}
+
+@keyframes verifiedPop {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* =============================== */
+/*         SUBMIT BUTTON           */
+/* =============================== */
+.club-submit-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  color: white;
+  font-weight: 600;
+  margin-top: 8px;
+  transition: 0.2s;
+}
+
+.club-submit-btn:hover {
+  opacity: 0.95;
+}
+
+/* =============================== */
+/*         SIGNUP TOGGLE           */
+/* =============================== */
+.club-toggle-btn {
+  margin-top: 12px;
+  width: 100%;
+  font-size: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #c084fc;
+}
+
+.club-toggle-btn:hover {
+  text-decoration: underline;
+}
+
+/* =============================== */
+/*          HELP FOOTER            */
+/* =============================== */
+.club-footer-hint {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.45);
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* =============================== */
+/*         BOTTOM STATEMENT        */
+/* =============================== */
+.club-bottom-text {
+  margin-top: 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  position: relative;
+  z-index: 5;
+}
+
+.club-bottom-text span {
+  color: #c084fc;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 14px;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.club-secured {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Make input wrapper the positioning parent */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Eye icon positioning fix */
+.eye-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
