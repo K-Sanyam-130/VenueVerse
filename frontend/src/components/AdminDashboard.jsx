@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart3,
   Users,
@@ -6,24 +6,48 @@ import {
   UserCheck,
   AlertTriangle,
   Activity,
-  MapPin,
   LogOut,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import "./AdminDashboard.css";
 import logo from "../assets/venueverse-logo.jpg";
+import { ENDPOINTS, getAuthHeaders } from "../api";
 
 export default function AdminDashboard({
   onLogout,
   onUserManagement,
-  onEventManagement,   // ⭐ NEW — added event navigation
+  onEventManagement,
 }) {
   const [activeSection, setActiveSection] = useState("overview");
+  const [dashboardStats, setDashboardStats] = useState({
+    totalEvents: 0,
+    activeEvents: 0, // Events Going On
+    totalUsers: 0,   // Total Clubs
+    activeUsers: 0   // Active Clubs
+  });
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/stats`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDashboardStats(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats", err);
+    }
+  };
 
   const stats = [
-    { label: "Total Events", value: "24", icon: Calendar, color: "cyan" },
-    { label: "Active Users", value: "156", icon: Users, color: "lime" },
-    { label: "Club Officials", value: "12", icon: UserCheck, color: "amber" },
+    { label: "Total Events", value: dashboardStats.totalEvents, icon: Calendar, color: "cyan" },
+    { label: "Events Going On", value: dashboardStats.activeEvents, icon: Activity, color: "lime" },
+    { label: "Club Officials", value: dashboardStats.totalUsers, icon: UserCheck, color: "amber" },
     { label: "System Alerts", value: "3", icon: AlertTriangle, color: "pink" },
   ];
 
@@ -52,38 +76,19 @@ export default function AdminDashboard({
     },
   ];
 
-  const venueChanges = [
-    {
-      id: 1,
-      name: "Yoga & Wellness Session",
-      club: "Health & Wellness Club",
-      currentVenue: "Indoor Gym",
-      requestedVenue: "Rooftop Garden",
-      availableVenues: ["Rooftop Garden", "East Lawn Area", "Meditation Hall"],
-    },
-  ];
-
-  // ⭐ UPDATED TABS (User + Event = external navigation)
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
-
-    // ⭐ User Management → redirect to separate page
     { id: "users", label: "User Management", icon: Users, isExternal: true },
-
-    // ⭐ Event Management → redirect to new page
     { id: "events", label: "Event Management", icon: Calendar, isExternal: true },
-
     { id: "system", label: "System Settings", icon: Activity },
-    { id: "database", label: "Database", icon: MapPin },
   ];
 
   return (
     <div className="admin-root">
-
       {/* BACKGROUND */}
       <div className="admin-bg" />
 
-      {/* FIXED HEADER */}
+      {/* HEADER */}
       <header className="admin-header-fixed">
         <div className="admin-header-left">
           <img src={logo} className="admin-header-logo" alt="logo" />
@@ -101,7 +106,6 @@ export default function AdminDashboard({
 
       {/* MAIN */}
       <main className="admin-main">
-
         {/* TABS */}
         <div className="admin-tabs">
           {tabs.map((tab) => {
@@ -129,10 +133,10 @@ export default function AdminDashboard({
           })}
         </div>
 
-        {/* OVERVIEW SECTION */}
+        {/* OVERVIEW */}
         {activeSection === "overview" && (
           <div className="overview-wrapper">
-
+            {/* STATS */}
             <div className="stats-grid">
               {stats.map((stat, i) => (
                 <motion.div
@@ -145,7 +149,6 @@ export default function AdminDashboard({
                   <div className={`stat-icon ${stat.color}`}>
                     <stat.icon size={26} />
                   </div>
-
                   <div>
                     <p className="stat-label">{stat.label}</p>
                     <p className="stat-value">{stat.value}</p>
@@ -154,9 +157,8 @@ export default function AdminDashboard({
               ))}
             </div>
 
-            {/* 3 COLUMNS */}
+            {/* 2 COLUMN GRID (Venue card removed) */}
             <div className="three-col-grid">
-
               {/* Recent Activity */}
               <div className="mini-card">
                 <h3 className="mini-title">
@@ -194,8 +196,8 @@ export default function AdminDashboard({
                           alert.type === "error"
                             ? "dot-red"
                             : alert.type === "warning"
-                            ? "dot-yellow"
-                            : "dot-blue"
+                              ? "dot-yellow"
+                              : "dot-blue"
                         }
                       />
                       <div>
@@ -206,43 +208,11 @@ export default function AdminDashboard({
                   ))}
                 </div>
               </div>
-
-              {/* Venue Changes */}
-              <div className="venue-card">
-                <h3 className="venue-title">
-                  <MapPin size={16} />
-                  Venue Changes
-                  <span className="pending-pill">{venueChanges.length} Pending</span>
-                </h3>
-
-                {venueChanges.map((vc) => (
-                  <div key={vc.id} className="venue-item">
-                    <h4 className="venue-name">{vc.name}</h4>
-                    <p className="venue-club">{vc.club}</p>
-
-                    <p className="venue-from">
-                      From: <span className="cut">{vc.currentVenue}</span>
-                    </p>
-
-                    <p className="venue-to">
-                      To: <span className="to-venue">{vc.requestedVenue}</span>
-                    </p>
-
-                    <div className="venue-chip-list">
-                      {vc.availableVenues.map((v, i) => (
-                        <span key={i} className="venue-chip">
-                          {v}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}
 
-        {/* PLACEHOLDER for system/database */}
+        {/* PLACEHOLDER */}
         {activeSection !== "overview" &&
           activeSection !== "users" &&
           activeSection !== "events" && (

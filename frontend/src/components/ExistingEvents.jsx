@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Calendar,
   Clock,
@@ -16,66 +17,50 @@ import {
 import "./ExistingEvents.css";
 import logo from "../assets/venueverse-logo.jpg";
 
-export default function ExistingEvents({ onBack }) {   // ✅ default export
+export default function ExistingEvents({ onBack }) {
   const [selectedClub, setSelectedClub] = useState("all");
+  const [events, setEvents] = useState([]);
 
-  const events = [
-    {
-      id: 1,
-      name: "Fun and Hunt",
-      club: "Adventure Club",
-      date: "Dec 5, 2024",
-      time: "8 AM – 12 PM",
-      venue: "Campus Grounds",
-      description:
-        "A thrilling treasure hunt adventure across campus with multiple clue stages.",
-      capacity: 45,
-      registered: 21,
-      status: "ongoing",
-      coordinator: {
-        name: "Aditya Sharma",
-        email: "aditya.sharma@college.edu",
-        phone: "+91 9876543210",
-      },
-    },
-    {
-      id: 2,
-      name: "Coding Marathon",
-      club: "Code Warriors",
-      date: "Dec 10, 2024",
-      time: "9 AM – 6 PM",
-      venue: "Computer Lab",
-      description:
-        "A competitive coding marathon for students to solve challenging problems.",
-      capacity: 32,
-      registered: 17,
-      status: "upcoming",
-      coordinator: {
-        name: "Riya Verma",
-        email: "riya.verma@college.edu",
-        phone: "+91 9001122334",
-      },
-    },
-    {
-      id: 3,
-      name: "Music Festival",
-      club: "Music Society",
-      date: "Dec 15, 2024",
-      time: "5 PM – 10 PM",
-      venue: "Central Hall",
-      description:
-        "An evening filled with live music, band performances, and acoustic sessions.",
-      capacity: 120,
-      registered: 68,
-      status: "upcoming",
-      coordinator: {
-        name: "Karan Mehta",
-        email: "karan.mehta@college.edu",
-        phone: "+91 9812233445",
-      },
-    },
-  ];
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
+  /* ----------------------------------------------------
+      FETCH ALL APPROVED EVENTS (ALL CLUBS)
+  ---------------------------------------------------- */
+  const fetchEvents = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/events/approved"
+      );
+
+      const formattedEvents = res.data.map((e) => ({
+        id: e._id,
+        name: e.eventName,
+        club: e.clubName,
+        date: e.date,
+        time: e.timeSlot,
+        venue: e.venue,
+        description: "Approved event",
+        capacity: 100,
+        registered: 0,
+        eventType: e.eventType || "UPCOMING",
+        coordinator: {
+          name: e.clubName,
+          email: e.email || "club@college.edu",
+          phone: "+91 XXXXXXXX",
+        },
+      }));
+
+      setEvents(formattedEvents);
+    } catch (err) {
+      console.error("Failed to fetch existing events", err);
+    }
+  };
+
+  /* ----------------------------------------------------
+      FILTER LOGIC
+  ---------------------------------------------------- */
   const clubs = ["all", ...Array.from(new Set(events.map((e) => e.club)))];
 
   const filteredEvents =
@@ -83,8 +68,8 @@ export default function ExistingEvents({ onBack }) {   // ✅ default export
       ? events
       : events.filter((e) => e.club === selectedClub);
 
-  const ongoing = filteredEvents.filter((e) => e.status === "ongoing");
-  const upcoming = filteredEvents.filter((e) => e.status === "upcoming");
+  const ongoing = filteredEvents.filter((e) => e.eventType === "LIVE");
+  const upcoming = filteredEvents.filter((e) => e.eventType === "UPCOMING");
 
   return (
     <div className="events-container">
@@ -94,14 +79,14 @@ export default function ExistingEvents({ onBack }) {   // ✅ default export
       <div className="events-header-modern">
         <div className="events-header-left">
           <img src={logo} alt="VenueVerse Logo" className="events-logo-modern" />
-
           <div>
             <h1 className="events-title">Existing Events</h1>
-            <p className="events-subtitle">View all ongoing & upcoming events</p>
+            <p className="events-subtitle">
+              View all ongoing & upcoming events
+            </p>
           </div>
         </div>
 
-        {/* FIXED BACK BUTTON */}
         <button className="back-button-modern" onClick={onBack}>
           <ArrowLeft size={20} />
           Back
@@ -119,7 +104,9 @@ export default function ExistingEvents({ onBack }) {   // ✅ default export
           {clubs.map((club) => (
             <button
               key={club}
-              className={selectedClub === club ? "filter-btn active" : "filter-btn"}
+              className={
+                selectedClub === club ? "filter-btn active" : "filter-btn"
+              }
               onClick={() => setSelectedClub(club)}
             >
               {club === "all" ? "All Clubs" : club}
@@ -133,7 +120,7 @@ export default function ExistingEvents({ onBack }) {   // ✅ default export
         </p>
       </div>
 
-      {/* ONGOING EVENTS */}
+      {/* LIVE EVENTS */}
       {ongoing.length > 0 && (
         <div className="section-block">
           <div className="section-title">
@@ -164,7 +151,9 @@ export default function ExistingEvents({ onBack }) {   // ✅ default export
   );
 }
 
-/* EVENT CARD COMPONENT */
+/* ----------------------------------------------------
+    EVENT CARD (UI UNCHANGED)
+---------------------------------------------------- */
 function EventCard({ event, isOngoing }) {
   const percent = Math.round((event.registered / event.capacity) * 100);
 
@@ -175,7 +164,6 @@ function EventCard({ event, isOngoing }) {
       <div className="event-header">
         <div>
           <h3 className="event-name">{event.name}</h3>
-
           <span className="event-badge">
             <Building2 size={14} />
             {event.club}
@@ -191,7 +179,6 @@ function EventCard({ event, isOngoing }) {
       <p className="event-desc">{event.description}</p>
 
       <div className="event-grid">
-        {/* LEFT */}
         <div className="event-info">
           <div className="info-row">
             <Calendar size={18} />
@@ -217,7 +204,6 @@ function EventCard({ event, isOngoing }) {
             </div>
           </div>
 
-          {/* PROGRESS */}
           <div>
             <div className="progress-label">
               Registration Status — {percent}% Full
@@ -240,7 +226,6 @@ function EventCard({ event, isOngoing }) {
           </div>
         </div>
 
-        {/* COORDINATOR */}
         <div className="coordinator-card">
           <h4>Event Coordinator</h4>
 

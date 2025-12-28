@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Eye, EyeOff, Shield, ArrowLeft, Sparkles, Lock } from "lucide-react";
+import { Eye, EyeOff, Shield, ArrowLeft, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import "./AdminLogin.css";
 
 import logo from "../assets/venueverse-logo.jpg";
+import { ENDPOINTS } from "../api";
 
 export default function AdminLogin({ onLogin, onBack }) {
   const [formData, setFormData] = useState({
@@ -15,24 +16,49 @@ export default function AdminLogin({ onLogin, onBack }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (error) setError("");
+  };
+
+  /* ------------------------------------
+     ADMIN LOGIN (ADMIN MODEL)
+  ------------------------------------ */
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (formData.adminId === "admin001" && formData.password === "admin123") {
-        onLogin();
-      } else {
-        setError("Invalid Admin ID or password. Please try again.");
-      }
-      setIsLoading(false);
-    }, 1200);
-  };
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.adminId,
+          password: formData.password
+        })
+      });
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    if (error) setError("");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setIsLoading(false);
+        setError(data.msg || "Admin login failed");
+        return;
+      }
+
+      // ✅ SUCCESS (ADMIN)
+      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("admin", JSON.stringify(data.admin));
+
+      setIsLoading(false);
+      onLogin && onLogin();
+
+    } catch (err) {
+      console.error("ADMIN LOGIN ERROR:", err);
+      setIsLoading(false);
+      setError("Server error during admin login");
+    }
   };
 
   return (
@@ -105,15 +131,6 @@ export default function AdminLogin({ onLogin, onBack }) {
         {/* BODY */}
         <div className="admin-body">
 
-          {/* Center Logo */}
-          <motion.img
-            src={logo}
-            alt="VenueVerse"
-            className="admin-center-logo"
-            whileHover={{ rotate: [-4, 4, -4, 0], scale: 1.1 }}
-            transition={{ duration: 0.6 }}
-          />
-
           {/* ERROR */}
           {error && (
             <motion.div
@@ -128,22 +145,20 @@ export default function AdminLogin({ onLogin, onBack }) {
           {/* FORM */}
           <form onSubmit={handleSubmit} className="admin-form">
 
-            {/* Admin ID */}
             <label className="admin-label">
               <Shield size={16} className="admin-icon indigo" />
-              Admin ID
+              Admin Email
             </label>
             <input
-              type="text"
+              type="email"
               name="adminId"
               value={formData.adminId}
               onChange={handleChange}
               className="admin-input"
-              placeholder="Enter your admin ID"
+              placeholder="admin@venueverse.com"
               required
             />
 
-            {/* Password */}
             <label className="admin-label">
               <Lock size={16} className="admin-icon purple" />
               Password
@@ -170,45 +185,18 @@ export default function AdminLogin({ onLogin, onBack }) {
               </motion.button>
             </div>
 
-            {/* SUBMIT BUTTON */}
             <motion.button
               type="submit"
               disabled={isLoading}
               className="admin-submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
-              {isLoading ? (
-                <>
-                  <motion.div
-                    className="admin-loader"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  <Shield size={18} />
-                  Login as Admin
-                </>
-              )}
+              {isLoading ? "Authenticating..." : "Login as Admin"}
             </motion.button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="admin-demo">
-            <h3>
-              <Sparkles size={14} className="admin-icon indigo" /> Demo Credentials:
-            </h3>
-            <p><span className="indigo">Admin ID:</span> admin001</p>
-            <p><span className="purple">Password:</span> admin123</p>
-          </div>
-
-          {/* SECURITY NOTICE */}
           <div className="admin-security">
             <Shield size={14} />
-            <span><strong>Security Notice:</strong> Ensure you're logging in from a secure device.</span>
+            <span><strong>Security Notice:</strong> Admin access only</span>
           </div>
 
         </div>

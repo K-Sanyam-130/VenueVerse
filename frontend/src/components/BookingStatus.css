@@ -307,3 +307,170 @@
   box-shadow: 0 10px 36px rgba(99,102,241,0.12);
   border-color: rgba(99,102,241,0.18);
 }
+
+.bs-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.bs-event-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.bs-club-name {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.bs-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.bs-card-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.bs-card-item .label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.bs-card-item .value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .bs-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .bs-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* HORIZONTAL CARD */
+.bs-card-horizontal {
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 28, 60, 0.9),
+    rgba(12, 18, 45, 0.95)
+  );
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 22px;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25),
+              0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+/* TOP ROW */
+.bs-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+
+.bs-event-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.bs-booking-id {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* STATUS PILL */
+.bs-status-pill {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.status-confirmed {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.status-rejected {
+  background: #ef4444;
+  color: #450a0a;
+}
+
+/* INFO ROW */
+.bs-card-info-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.bs-info-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bs-info-block .label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.bs-info-block .value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* REJECTION MESSAGE */
+.bs-rejected {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .bs-card-info-row {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .bs-card-info-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -7,25 +7,70 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
+/* =========================
+   MIDDLEWARES
+========================= */
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+/* =========================
+   DATABASE
+========================= */
 connectDB();
 
-// Routes
-app.use("/api/users", require("./routes/userRoutes"));   // Register + Login (all users)
-app.use("/api/club", require("./routes/clubRoutes"));     // Club login only
-app.use("/api/otp", require("./routes/otpRoutes"));       // OTP send + verify
+/* =========================
+   BACKGROUND JOBS
+========================= */
+// 🔥 Auto LIVE / UPCOMING scheduler
+require("./jobs/eventScheduler");
 
-// Default route (optional)
+/* =========================
+   ROUTES
+========================= */
+
+// Auth & Users
+app.use("/api/users", require("./routes/userRoutes"));    // Users / Clubs
+app.use("/api/otp", require("./routes/otpRoutes"));       // OTP
+
+// Admin (Dedicated Admin Model)
+app.use("/api/admin", require("./routes/adminRoutes"));   // Admin login + actions
+// Routes
+app.use("/api/admin", require("./routes/adminRoutes"));
+
+// ADD THIS DEBUG CODE
+console.log("✅ Admin routes registered");
+const adminRouter = require("./routes/adminRoutes");
+console.log("📋 Admin router stack:", adminRouter.stack.map(r => ({
+   path: r.route?.path,
+   methods: Object.keys(r.route?.methods || {})
+})));
+
+// Events
+app.use("/api/events", require("./routes/eventRoutes"));  // Event lifecycle
+app.use("/api/requests", require("./routes/requestRoutes")); // Venue Change Requests
+
+/* =========================
+   HEALTH CHECK
+========================= */
 app.get("/", (req, res) => {
-  res.send("VenueVerse Backend is Running...");
+   res.status(200).send("VenueVerse Backend is Running...");
 });
 
-// Start Server
+/* =========================
+   ERROR HANDLER (OPTIONAL BUT SAFE)
+========================= */
+app.use((err, req, res, next) => {
+   console.error("UNHANDLED ERROR:", err);
+   res.status(500).json({
+      success: false,
+      message: "Internal server error"
+   });
+});
+
+/* =========================
+   START SERVER
+========================= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+   console.log(`🚀 Server running on port ${PORT}`);
 });

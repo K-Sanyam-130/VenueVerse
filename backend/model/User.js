@@ -8,6 +8,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["admin", "club", "student"],
     required: true
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  lastLogin: {
+    type: Date,
+    default: null
   }
 });
 

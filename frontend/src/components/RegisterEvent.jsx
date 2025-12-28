@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
 
 import {
@@ -13,7 +14,9 @@ import {
 import "./RegisterEvent.css";
 import logo from "../assets/venueverse-logo.jpg";
 
-export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED DEFAULT EXPORT
+import { ENDPOINTS, getAuthHeaders, getUser } from "../api";
+
+export default function RegisterEvent({ onBack, onRegistered }) {
   const [formData, setFormData] = useState({
     memberName: "",
     eventName: "",
@@ -28,29 +31,17 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
   const [lastRegistration, setLastRegistration] = useState(null);
 
   /* ----------------------------------------------------
-      LOAD LAST REGISTRATION ON PAGE OPEN
-  ---------------------------------------------------- */
-  useEffect(() => {
-    const registrations = localStorage.getItem("registrations");
-    if (registrations) {
-      const parsed = JSON.parse(registrations);
-      if (parsed.length > 0) {
-        setLastRegistration(parsed[parsed.length - 1]);
-      }
-    }
-  }, []);
-
-  /* ----------------------------------------------------
       HANDLE SUBMIT
   ---------------------------------------------------- */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
       !formData.memberName ||
       !formData.eventName ||
       !formData.eventDate ||
-      (!formData.timeSlot && (!formData.customStart || !formData.customEnd))
+      (!formData.timeSlot &&
+        (!formData.customStart || !formData.customEnd))
     ) {
       alert("Please fill all required fields.");
       return;
@@ -61,45 +52,66 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
         ? `${formData.customStart} - ${formData.customEnd}`
         : formData.timeSlot;
 
-    const existing = JSON.parse(localStorage.getItem("registrations")) || [];
+    try {
+      const user = getUser();
 
-    const newReg = {
-      id: Date.now(),
-      memberName: formData.memberName,
-      eventName: formData.eventName,
-      timeSlot,
-      venue: formData.venue || "Not specified",
-      description: formData.description,
-      date: new Date(formData.eventDate).toLocaleDateString(),
-      timestamp: new Date().toISOString(),
-      status: "Pending",
-    };
+      if (!user) {
+        alert("User session not found. Please login again.");
+        return;
+      }
 
-    const updated = [...existing, newReg];
+      const clubName = user.name || "Unknown Club";
+      const userEmail = user.email || "";
 
-    localStorage.setItem("registrations", JSON.stringify(updated));
+      // ✅ FIXED ENDPOINT + AUTH HEADER
+      const res = await axios.post(
+        `${ENDPOINTS.EVENTS}/add`,
+        {
+          eventName: formData.eventName,
+          clubName,
+          email: userEmail,
+          date: formData.eventDate,
+          timeSlot,
+          venue: formData.venue || "Not specified",
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
-    setLastRegistration(newReg);
+      alert(res.data.message || "Event registered successfully!");
 
-    window.dispatchEvent(new Event("storage"));
+      setLastRegistration({
+        memberName: formData.memberName,
+        eventName: formData.eventName,
+        timeSlot,
+        venue: formData.venue || "Not specified",
+        description: formData.description,
+      });
 
-    alert("Event registered successfully!");
+      // RESET FORM
+      setFormData({
+        memberName: "",
+        eventName: "",
+        eventDate: "",
+        timeSlot: "",
+        customStart: "",
+        customEnd: "",
+        venue: "",
+        description: "",
+      });
 
-    // RESET FORM
-    setFormData({
-      memberName: "",
-      eventName: "",
-      eventDate: "",
-      timeSlot: "",
-      customStart: "",
-      customEnd: "",
-      venue: "",
-      description: "",
-    });
-
-    // AUTO REDIRECT TO BOOKING STATUS
-    if (onRegistered) {
-      onRegistered();
+      if (onRegistered) onRegistered();
+    } catch (err) {
+      console.error("❌ Event registration failed:", err);
+      // Log detailed error from Axios
+      if (err.response) {
+        console.error("Response Data:", err.response.data);
+        console.error("Response Status:", err.response.status);
+        alert(`Failed: ${err.response.data.message || err.response.statusText}`);
+      } else {
+        alert("Failed to register event. Please check your connection.");
+      }
     }
   };
 
@@ -127,7 +139,6 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
 
   return (
     <div className="re-root">
-      {/* BACKGROUND */}
       <div className="re-bg-layer"></div>
       <div className="re-bg-radial"></div>
 
@@ -156,7 +167,6 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
 
       {/* MAIN CONTENT */}
       <div className="re-container">
-        {/* FORM CARD */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,7 +177,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
           <p className="re-card-sub">Fill in the details below to register</p>
 
           <form onSubmit={handleSubmit} className="re-form">
-            {/* NAME */}
+            {/* NAME + EVENT */}
             <div className="re-grid-2">
               <div className="re-field">
                 <label>
@@ -196,7 +206,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
               </div>
             </div>
 
-            {/* DATE */}
+            {/* DATE + TIME */}
             <div className="re-grid-2">
               <div className="re-field">
                 <label>
@@ -204,6 +214,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
                 </label>
                 <input
                   type="date"
+                  min={new Date().toISOString().split("T")[0]} // ✅ Prevent past dates
                   value={formData.eventDate}
                   onChange={(e) =>
                     setFormData({ ...formData, eventDate: e.target.value })
@@ -211,12 +222,10 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
                 />
               </div>
 
-              {/* TIME SLOT */}
               <div className="re-field">
                 <label>
                   <Clock size={16} /> Time Slot *
                 </label>
-
                 <select
                   value={formData.timeSlot}
                   onChange={(e) =>
@@ -231,7 +240,6 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
                   ))}
                 </select>
 
-                {/* CUSTOM TIME RANGE */}
                 {formData.timeSlot === "custom" && (
                   <div className="re-custom-time">
                     <input
@@ -265,7 +273,6 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
               <label>
                 <MapPin size={16} /> Venue
               </label>
-
               <select
                 value={formData.venue}
                 onChange={(e) =>
@@ -348,7 +355,8 @@ export default function RegisterEvent({ onBack, onRegistered }) {   // ✅ FIXED
 
             {lastRegistration.description && (
               <p>
-                <strong>Description:</strong> {lastRegistration.description}
+                <strong>Description:</strong>{" "}
+                {lastRegistration.description}
               </p>
             )}
           </motion.div>

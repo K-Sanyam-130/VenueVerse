@@ -23,10 +23,15 @@ exports.clubLogin = async (req, res) => {
     if (!match)
       return res.status(400).json({ msg: "Invalid password!" });
 
-    // sign JWT
+    // 🔑 FIX: include clubName in JWT
     const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET
+      {
+        id: user._id,
+        role: user.role,
+        clubName: user.name, // 🔥 IMPORTANT (or user.clubName if field exists)
+      },
+      process.env.JWT_SECRET || "venueverse_secret",
+      { expiresIn: "1d" }
     );
 
     res.json({
@@ -37,6 +42,7 @@ exports.clubLogin = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        clubName: user.name, // 🔥 send to frontend
       },
     });
   } catch (err) {

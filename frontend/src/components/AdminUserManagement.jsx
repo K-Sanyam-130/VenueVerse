@@ -1,139 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Search, LogOut, ShieldAlert } from "lucide-react";
 import "./AdminUserManagement.css";
 import logo from "../assets/venueverse-logo.jpg";
+import { ENDPOINTS, getAuthHeaders } from "../api";
 
 export default function AdminUserManagement({ onBack, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [pendingBlockId, setPendingBlockId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [loginActivities, setLoginActivities] = useState([
-    {
-      id: 1,
-      clubName: "Adventure Club",
-      userId: "AC-2024-001",
-      userName: "Alex Rodriguez",
-      loginTime: "2024-12-15 08:45:23 AM",
-      accessStatus: "active",
-    },
-    {
-      id: 2,
-      clubName: "Technology Club",
-      userId: "TC-2024-002",
-      userName: "Sarah Johnson",
-      loginTime: "2024-12-15 09:12:45 AM",
-      accessStatus: "active",
-    },
-    {
-      id: 3,
-      clubName: "Sports Club",
-      userId: "SC-2024-003",
-      userName: "Mike Chen",
-      loginTime: "2024-12-15 09:30:17 AM",
-      accessStatus: "blocked",
-    },
-    {
-      id: 4,
-      clubName: "Arts & Media Club",
-      userId: "AMC-2024-004",
-      userName: "Emma Thompson",
-      loginTime: "2024-12-15 10:05:38 AM",
-      accessStatus: "active",
-    },
-    {
-      id: 5,
-      clubName: "Science Club",
-      userId: "SCC-2024-005",
-      userName: "Dr. Emily Brown",
-      loginTime: "2024-12-15 10:22:55 AM",
-      accessStatus: "active",
-    },
-    {
-      id: 6,
-      clubName: "Music Club",
-      userId: "MC-2024-006",
-      userName: "James Wilson",
-      loginTime: "2024-12-15 11:15:42 AM",
-      accessStatus: "active",
-    },
-    {
-      id: 7,
-      clubName: "Adventure Club",
-      userId: "AC-2024-001",
-      userName: "Alex Rodriguez",
-      loginTime: "2024-12-15 02:30:18 PM",
-      accessStatus: "active",
-    },
-    {
-      id: 8,
-      clubName: "Culinary Club",
-      userId: "CC-2024-007",
-      userName: "Lisa Anderson",
-      loginTime: "2024-12-15 03:45:29 PM",
-      accessStatus: "active",
-    },
-    {
-      id: 9,
-      clubName: "Entertainment Club",
-      userId: "EC-2024-008",
-      userName: "David Martinez",
-      loginTime: "2024-12-15 04:10:50 PM",
-      accessStatus: "blocked",
-    },
-    {
-      id: 10,
-      clubName: "Technology Club",
-      userId: "TC-2024-002",
-      userName: "Sarah Johnson",
-      loginTime: "2024-12-15 05:20:33 PM",
-      accessStatus: "active",
-    },
-  ]);
+  /* =========================
+     FETCH USERS
+  ========================= */
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/users`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.status === 401 || res.status === 403) {
+        onLogout();
+        return;
+      }
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch users", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredActivities = loginActivities.filter((activity) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  /* =========================
+     COMPUTED VALUES
+  ========================= */
+  const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase();
+    // u.name is the Club Name
     return (
-      activity.clubName.toLowerCase().includes(q) ||
-      activity.userId.toLowerCase().includes(q) ||
-      activity.userName.toLowerCase().includes(q)
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u._id && u._id.toLowerCase().includes(q))
     );
   });
 
-  const totalUsers = loginActivities.length;
-  const activeUsers = loginActivities.filter(
-    (a) => a.accessStatus === "active"
-  ).length;
+  const totalUsers = users.length;
+  const activeUsers = users.filter((u) => !u.isBlocked).length;
   const blockedUsers = totalUsers - activeUsers;
 
+  /* =========================
+     HANDLERS
+  ========================= */
   const handleToggle = (id) => {
-    const target = loginActivities.find((a) => a.id === id);
+    const target = users.find((u) => u._id === id);
     if (!target) return;
 
-    if (target.accessStatus === "active") {
-      // 👉 Ask for confirmation before blocking
+    if (!target.isBlocked) {
+      // Asking to BLOCK -> Confirm first
       setPendingBlockId(id);
       setIsModalOpen(true);
     } else {
-      // 👉 Unblock immediately
-      setLoginActivities((prev) =>
-        prev.map((a) =>
-          a.id === id ? { ...a, accessStatus: "active" } : a
-        )
-      );
+      // Asking to UNBLOCK -> Do immediately
+      performAction(id, "unblock");
     }
   };
 
   const confirmBlock = () => {
-    if (!pendingBlockId) return;
-    setLoginActivities((prev) =>
-      prev.map((a) =>
-        a.id === pendingBlockId ? { ...a, accessStatus: "blocked" } : a
-      )
-    );
+    if (pendingBlockId) {
+      performAction(pendingBlockId, "block");
+    }
     setPendingBlockId(null);
     setIsModalOpen(false);
+  };
+
+  const performAction = async (id, action) => {
+    // Optimistic update
+    setUsers((prev) =>
+      prev.map((u) =>
+        u._id === id ? { ...u, isBlocked: action === "block" } : u
+      )
+    );
+
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/users/${id}/${action}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) throw new Error("Action failed");
+
+      // Refresh to ensure sync
+      fetchUsers();
+    } catch (err) {
+      console.error(`Failed to ${action} user`, err);
+      alert(`Failed to ${action} user. Please try again.`);
+      // Revert on failure
+      fetchUsers();
+    }
   };
 
   const cancelBlock = () => {
@@ -142,7 +111,7 @@ export default function AdminUserManagement({ onBack, onLogout }) {
   };
 
   const pendingUser = pendingBlockId
-    ? loginActivities.find((a) => a.id === pendingBlockId)
+    ? users.find((u) => u._id === pendingBlockId)
     : null;
 
   return (
@@ -223,7 +192,7 @@ export default function AdminUserManagement({ onBack, onLogout }) {
         >
           <div className="user-table-header">
             <h2 className="user-table-title">
-              Login Activity Log ({filteredActivities.length})
+              Registered Clubs & Officials ({filteredUsers.length})
             </h2>
           </div>
 
@@ -232,51 +201,56 @@ export default function AdminUserManagement({ onBack, onLogout }) {
               <thead>
                 <tr>
                   <th>Club Name</th>
-                  <th>User ID</th>
-                  <th>User Name</th>
+                  <th>Email / ID</th>
                   <th>Last Login</th>
-                  <th>Access</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredActivities.map((activity) => (
-                  <tr key={activity.id}>
-                    <td>{activity.clubName}</td>
-                    <td className="muted">{activity.userId}</td>
-                    <td>{activity.userName}</td>
-                    <td className="muted">{activity.loginTime}</td>
+                {filteredUsers.map((u) => (
+                  <tr key={u._id}>
+                    <td>{u.name}</td>
+                    <td className="muted">
+                      {u.email}
+                      <br />
+                      <span style={{ fontSize: "0.8em" }}>{u._id}</span>
+                    </td>
+                    <td className="muted">
+                      {u.lastLogin
+                        ? new Date(u.lastLogin).toLocaleString()
+                        : "Never"}
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          "user-access-pill " +
+                          (!u.isBlocked ? "pill-active" : "pill-blocked")
+                        }
+                      >
+                        {!u.isBlocked ? "Active" : "Blocked"}
+                      </span>
+                    </td>
                     <td>
                       <div className="user-access-cell">
                         <div
                           className={
                             "user-switch " +
-                            (activity.accessStatus === "active" ? "on" : "")
+                            (!u.isBlocked ? "on" : "")
                           }
-                          onClick={() => handleToggle(activity.id)}
+                          onClick={() => handleToggle(u._id)}
                         >
                           <div className="user-switch-knob" />
                         </div>
-                        <span
-                          className={
-                            "user-access-pill " +
-                            (activity.accessStatus === "active"
-                              ? "pill-active"
-                              : "pill-blocked")
-                          }
-                        >
-                          {activity.accessStatus === "active"
-                            ? "Active"
-                            : "Blocked"}
-                        </span>
                       </div>
                     </td>
                   </tr>
                 ))}
 
-                {filteredActivities.length === 0 && (
+                {filteredUsers.length === 0 && (
                   <tr>
                     <td colSpan={5} className="user-empty">
-                      No users match your search.
+                      No clubs found matching your search.
                     </td>
                   </tr>
                 )}
@@ -297,12 +271,12 @@ export default function AdminUserManagement({ onBack, onLogout }) {
             <div className="user-modal-icon-wrap">
               <ShieldAlert size={26} className="user-modal-icon" />
             </div>
-            <h3 className="user-modal-title">Block this user?</h3>
+            <h3 className="user-modal-title">Block this club?</h3>
             <p className="user-modal-text">
               Are you sure you want to block{" "}
-              <span className="highlight">{pendingUser.userName}</span> (
-              {pendingUser.userId}) from{" "}
-              <span className="highlight">{pendingUser.clubName}</span>?
+              <span className="highlight">{pendingUser.name}</span>?
+              <br />
+              <span className="highlight">{pendingUser.email}</span>
               <br />
               <br />
               They will not be able to log in again until you manually unblock

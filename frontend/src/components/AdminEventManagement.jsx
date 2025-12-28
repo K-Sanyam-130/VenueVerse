@@ -1,285 +1,281 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./AdminEventManagement.css";
 import {
-  Calendar,
   CheckCircle,
-  XCircle,
   Clock,
+  XCircle,
+  MapPin,
   LogOut,
   ArrowLeft,
-  Info,
 } from "lucide-react";
 
+import { ENDPOINTS, getAuthHeaders } from "../api";
+
+const FILTERS = {
+  APPROVED: "APPROVED",
+  PENDING: "PENDING",
+  REJECTED: "REJECTED",
+  VENUE: "VENUE",
+};
+
 export default function AdminEventManagement({ onBack, onLogout }) {
-  // Dummy data
-  const [pendingEvents, setPendingEvents] = useState([
-    {
-      id: 1,
-      title: "Tech Talk: AI in 2025",
-      club: "Coding Club",
-      date: "2025-12-10",
-      venue: "Main Auditorium",
-      description: "A collaborative session on AI advancements.",
-    },
-    {
-      id: 2,
-      title: "Dance Auditions",
-      club: "Cultural Club",
-      date: "2025-12-12",
-      venue: "Dance Room 3",
-      description: "Auditions for annual fest performance.",
-    },
-  ]);
+  const [activeFilter, setActiveFilter] = useState(FILTERS.PENDING);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [approvedEvents, setApprovedEvents] = useState([
-    {
-      id: 3,
-      title: "Startup Bootcamp",
-      club: "Entrepreneurship Cell",
-      date: "2025-12-06",
-      venue: "Innovation Hall",
-      description: "Intensive workshop on building startups.",
-    },
-  ]);
+  /* =========================
+     FETCH DATA
+  ========================= */
+  const fetchData = async (filter) => {
+    setLoading(true);
 
-  const [cancelledEvents, setCancelledEvents] = useState([]);
+    try {
+      let url;
+      // Use different endpoints for Venue Requests vs Events
+      if (filter === FILTERS.VENUE) {
+        // ✅ Fix: Use the correct REQUESTS endpoint which returns Request objects
+        url = `${ENDPOINTS.REQUESTS}/admin`;
+      } else {
+        url = `${ENDPOINTS.ADMIN}/events/${filter}`;
+      }
 
-  // Reject popup
-  const [rejectPopupOpen, setRejectPopupOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [rejectReason, setRejectReason] = useState("");
+      const res = await fetch(url, {
+        headers: getAuthHeaders(),
+      });
 
-  // Details modal
-  const [detailsPopup, setDetailsPopup] = useState(false);
+      if (res.status === 401 || res.status === 403) {
+        onLogout();
+        return;
+      }
 
-  // Approve
-  const approveEvent = (event) => {
-    setPendingEvents(pendingEvents.filter((e) => e.id !== event.id));
-    setApprovedEvents([...approvedEvents, event]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("❌ Fetch failed:", err);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Open reject popup
-  const openRejectPopup = (event) => {
-    setSelectedEvent(event);
-    setRejectPopupOpen(true);
+  useEffect(() => {
+    fetchData(activeFilter);
+  }, [activeFilter]);
+
+  /* =========================
+     EVENT APPROVE / REJECT
+  ========================= */
+  /* =========================
+     EVENT APPROVE / REJECT
+  ========================= */
+  const approveEvent = async (id) => {
+    setItems((prev) => prev.filter((e) => e._id !== id));
+
+    try {
+      await fetch(`${ENDPOINTS.ADMIN}/approve/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      });
+      fetchData(activeFilter);
+    } catch (err) {
+      console.error("Error approving event", err);
+    }
   };
 
-  // Confirm rejection
-  const confirmReject = () => {
-    if (!rejectReason.trim()) return;
+  const rejectEvent = async (id) => {
+    const reason = prompt("Enter rejection reason");
+    if (!reason) return;
 
-    setCancelledEvents([
-      ...cancelledEvents,
-      { ...selectedEvent, reason: rejectReason },
-    ]);
+    setItems((prev) => prev.filter((e) => e._id !== id));
 
-    setPendingEvents(pendingEvents.filter((e) => e.id !== selectedEvent.id));
-
-    setRejectPopupOpen(false);
-    setRejectReason("");
+    try {
+      await fetch(`${ENDPOINTS.ADMIN}/reject/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ adminMessage: reason }),
+      });
+      fetchData(activeFilter);
+    } catch (err) {
+      console.error("Error rejecting event", err);
+    }
   };
 
-  // Open event details modal
-  const openDetails = (event) => {
-    setSelectedEvent(event);
-    setDetailsPopup(true);
+  /* =========================
+     VENUE APPROVE / REJECT
+  ========================= */
+  const approveVenue = async (id) => {
+    setItems((prev) => prev.filter((r) => r._id !== id));
+
+    try {
+      // ✅ Fix: Use the REQUESTS action endpoint which handles sync
+      await fetch(`${ENDPOINTS.REQUESTS}/${id}/action`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: "APPROVED" }),
+      });
+      fetchData(FILTERS.VENUE);
+    } catch (err) {
+      console.error("Error approving venue", err);
+    }
+  };
+
+  const rejectVenue = async (id) => {
+    const reason = prompt("Enter rejection reason");
+    if (!reason) return;
+
+    setItems((prev) => prev.filter((r) => r._id !== id));
+
+    try {
+      // ✅ Fix: Use the REQUESTS action endpoint
+      await fetch(`${ENDPOINTS.REQUESTS}/${id}/action`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: "REJECTED", adminComment: reason }),
+      });
+      fetchData(FILTERS.VENUE);
+    } catch (err) {
+      console.error("Error rejecting venue", err);
+    }
   };
 
   return (
     <div className="admin-event-root">
-      <div className="admin-bg" />
-
       {/* HEADER */}
       <header className="admin-event-header">
         <div className="header-left">
           <button className="back-btn" onClick={onBack}>
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
-          <h1 className="event-title">Event Management</h1>
+          <h1>Event Management</h1>
         </div>
 
-        <button className="logout-btn" onClick={onLogout}>
-          <LogOut size={18} />
-          Logout
+        <button
+          className="logout-btn"
+          onClick={() => {
+            localStorage.removeItem("adminToken");
+            onLogout();
+          }}
+        >
+          <LogOut size={16} /> Logout
         </button>
       </header>
 
-      {/* MAIN */}
+      {/* FILTER BAR */}
+      <div className="admin-filter-bar">
+        <FilterTab
+          active={activeFilter === FILTERS.APPROVED}
+          icon={<CheckCircle size={16} />}
+          label="Approved Events"
+          onClick={() => setActiveFilter(FILTERS.APPROVED)}
+        />
+        <FilterTab
+          active={activeFilter === FILTERS.PENDING}
+          icon={<Clock size={16} />}
+          label="Pending Approval"
+          onClick={() => setActiveFilter(FILTERS.PENDING)}
+        />
+        <FilterTab
+          active={activeFilter === FILTERS.REJECTED}
+          icon={<XCircle size={16} />}
+          label="Rejected / Cancelled"
+          onClick={() => setActiveFilter(FILTERS.REJECTED)}
+        />
+        <FilterTab
+          active={activeFilter === FILTERS.VENUE}
+          icon={<MapPin size={16} />}
+          label="Venue Requests"
+          onClick={() => setActiveFilter(FILTERS.VENUE)}
+        />
+      </div>
+
+      {/* LIST */}
       <main className="event-main">
-        {/* PENDING EVENTS */}
-        <section className="event-section">
-          <h2 className="section-title">
-            <Clock size={18} className="yellow-icon" /> Pending Requests
-          </h2>
-
-          <div className="event-grid">
-            {pendingEvents.length === 0 ? (
-              <p className="empty-msg">No pending event requests.</p>
+        {loading ? (
+          <p className="admin-empty">Loading...</p>
+        ) : items.length === 0 ? (
+          <p className="admin-empty">No records found</p>
+        ) : (
+          items.map((item) =>
+            activeFilter === FILTERS.VENUE ? (
+              <VenueRequestCard
+                key={item._id}
+                req={item}
+                onApprove={() => approveVenue(item._id)}
+                onReject={() => rejectVenue(item._id)}
+              />
             ) : (
-              pendingEvents.map((event) => (
-                <div key={event.id} className="event-card">
-                  <h3 className="event-name">{event.title}</h3>
-                  <p className="event-info">Club: {event.club}</p>
-                  <p className="event-info">Venue: {event.venue}</p>
-                  <p className="event-info">Date: {event.date}</p>
-
-                  <div className="event-btn-row">
-                    <button
-                      className="view-btn"
-                      onClick={() => openDetails(event)}
-                    >
-                      <Info size={16} /> View Details
-                    </button>
-
-                    <button
-                      className="approve-btn"
-                      onClick={() => approveEvent(event)}
-                    >
-                      <CheckCircle size={16} /> Approve
-                    </button>
-
-                    <button
-                      className="reject-btn"
-                      onClick={() => openRejectPopup(event)}
-                    >
-                      <XCircle size={16} /> Reject
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* APPROVED */}
-        <section className="event-section">
-          <h2 className="section-title">
-            <CheckCircle size={18} className="green-icon" /> Approved Events
-          </h2>
-
-          <div className="event-grid">
-            {approvedEvents.length === 0 ? (
-              <p className="empty-msg">No approved events.</p>
-            ) : (
-              approvedEvents.map((event) => (
-                <div key={event.id} className="event-card approved-card">
-                  <h3 className="event-name">{event.title}</h3>
-                  <p className="event-info">Club: {event.club}</p>
-                  <p className="event-info">Venue: {event.venue}</p>
-                  <p className="event-info">Date: {event.date}</p>
-
-                  <button
-                    className="view-btn"
-                    onClick={() => openDetails(event)}
-                  >
-                    <Info size={16} /> View Details
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* CANCELLED */}
-        <section className="event-section">
-          <h2 className="section-title">
-            <XCircle size={18} className="red-icon" /> Cancelled Events
-          </h2>
-
-          <div className="event-grid">
-            {cancelledEvents.length === 0 ? (
-              <p className="empty-msg">No cancelled events.</p>
-            ) : (
-              cancelledEvents.map((event) => (
-                <div key={event.id} className="event-card cancelled-card">
-                  <h3 className="event-name">{event.title}</h3>
-                  <p className="event-info">Club: {event.club}</p>
-                  <p className="event-info">Venue: {event.venue}</p>
-                  <p className="event-info">Date: {event.date}</p>
-
-                  <p className="cancel-reason">
-                    <strong>Reason:</strong> {event.reason}
-                  </p>
-
-                  <button
-                    className="view-btn"
-                    onClick={() => openDetails(event)}
-                  >
-                    <Info size={16} /> View Details
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+              <EventCard
+                key={item._id}
+                event={item}
+                filter={activeFilter}
+                onApprove={() => approveEvent(item._id)}
+                onReject={() => rejectEvent(item._id)}
+              />
+            )
+          )
+        )}
       </main>
+    </div>
+  );
+}
 
-      {/* REJECT POPUP */}
-      {rejectPopupOpen && (
-        <div className="reject-popup-overlay">
-          <div className="reject-popup">
-            <h3>Reject Event</h3>
-            <p className="popup-sub">
-              Give a reason for rejecting:
-              <strong> {selectedEvent.title}</strong>
-            </p>
+/* =========================
+   FILTER TAB
+========================= */
+function FilterTab({ active, icon, label, onClick }) {
+  return (
+    <button
+      className={`filter-tab ${active ? "active" : ""}`}
+      onClick={onClick}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
 
-            <textarea
-              className="reject-input"
-              placeholder="Enter rejection reason..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-            />
+/* =========================
+   EVENT CARD
+========================= */
+function EventCard({ event, filter, onApprove, onReject }) {
+  return (
+    <div className="unified-card">
+      <h3>{event.eventName}</h3>
+      <p>🏛 {event.clubName}</p>
+      <p>📅 {event.date} • {event.timeSlot}</p>
+      <p>📍 {event.venue}</p>
 
-            <div className="popup-btn-row">
-              <button
-                className="cancel-btn"
-                onClick={() => setRejectPopupOpen(false)}
-              >
-                Cancel
-              </button>
-              <button className="confirm-btn" onClick={confirmReject}>
-                Confirm Reject
-              </button>
-            </div>
-          </div>
-        </div>
+      {filter === "REJECTED" && event.adminMessage && (
+        <p className="rejection-box">Reason: {event.adminMessage}</p>
       )}
 
-      {/* 📌 EVENT DETAILS MODAL */}
-      {detailsPopup && (
-        <div className="details-overlay">
-          <div className="details-modal">
-            <h2 className="details-title">{selectedEvent.title}</h2>
-
-            <p className="details-info">
-              <strong>Club:</strong> {selectedEvent.club}
-            </p>
-            <p className="details-info">
-              <strong>Venue:</strong> {selectedEvent.venue}
-            </p>
-            <p className="details-info">
-              <strong>Date:</strong> {selectedEvent.date}
-            </p>
-            <p className="details-info">
-              <strong>Description:</strong> {selectedEvent.description}
-            </p>
-
-            {selectedEvent.reason && (
-              <p className="details-reason">
-                <strong>Rejection Reason:</strong> {selectedEvent.reason}
-              </p>
-            )}
-
-            <button
-              className="close-details-btn"
-              onClick={() => setDetailsPopup(false)}
-            >
-              Close
-            </button>
-          </div>
+      {filter === "PENDING" && (
+        <div className="unified-actions">
+          <button className="approve-btn" onClick={onApprove}>Approve</button>
+          <button className="reject-btn" onClick={onReject}>Reject</button>
         </div>
       )}
+    </div>
+  );
+}
+
+/* =========================
+   VENUE REQUEST CARD
+========================= */
+function VenueRequestCard({ req, onApprove, onReject }) {
+  return (
+    <div className="unified-card venue">
+      <h3>{req.event?.eventName || "Event Name"}</h3>
+      <p>🏛 {req.club?.username || req.clubName}</p>
+      <p>📍 {req.event?.venue} → {req.requestedVenue}</p>
+      <p>📝 {req.reason}</p>
+
+      <div className="unified-actions">
+        <button className="approve-btn" onClick={onApprove}>Approve</button>
+        <button className="reject-btn" onClick={onReject}>Reject</button>
+      </div>
     </div>
   );
 }

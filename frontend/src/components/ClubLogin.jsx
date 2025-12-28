@@ -13,6 +13,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import "./ClubLogin.css";
+import { ENDPOINTS } from "../api";
 
 export default function ClubLogin({ onBack, onLogin }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -22,19 +23,17 @@ export default function ClubLogin({ onBack, onLogin }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // 👁 password visibility states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // OTP states
   const [otpSent, setOtpSent] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const API = "http://localhost:5000";
+  // API handled via import at top
 
   /* ============================
-     SEND OTP (SIGNUP ONLY)
+     SEND OTP
   ============================ */
   const sendOtp = async () => {
     if (!email) {
@@ -43,7 +42,7 @@ export default function ClubLogin({ onBack, onLogin }) {
     }
 
     try {
-      const res = await fetch(`${API}/api/otp/send`, {
+      const res = await fetch(`${ENDPOINTS.OTP}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -63,7 +62,7 @@ export default function ClubLogin({ onBack, onLogin }) {
   };
 
   /* ============================
-     VERIFY OTP (SIGNUP ONLY)
+     VERIFY OTP
   ============================ */
   const verifyOtp = async () => {
     if (!enteredOtp) {
@@ -72,7 +71,7 @@ export default function ClubLogin({ onBack, onLogin }) {
     }
 
     try {
-      const res = await fetch(`${API}/api/otp/verify`, {
+      const res = await fetch(`${ENDPOINTS.OTP}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: enteredOtp }),
@@ -92,11 +91,11 @@ export default function ClubLogin({ onBack, onLogin }) {
   };
 
   /* ============================
-     REGISTER CLUB (ONCE)
+     REGISTER CLUB
   ============================ */
   const registerClub = async () => {
     try {
-      const res = await fetch(`${API}/api/users/register`, {
+      const res = await fetch(`${ENDPOINTS.USERS}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,11 +122,11 @@ export default function ClubLogin({ onBack, onLogin }) {
   };
 
   /* ============================
-     CLUB LOGIN (EVERY TIME)
+     CLUB LOGIN (ONLY FIX HERE)
   ============================ */
   const handleClubLogin = async () => {
     try {
-      const res = await fetch(`${API}/api/users/login`, {
+      const res = await fetch(`${ENDPOINTS.USERS}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,8 +147,9 @@ export default function ClubLogin({ onBack, onLogin }) {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // ✅ ONLY NECESSARY FIX (NO DESIGN CHANGE)
+      localStorage.setItem("clubToken", data.token);
+      localStorage.setItem("club", JSON.stringify(data.user));
 
       alert("Login successful!");
       onLogin && onLogin(data.user);
@@ -300,7 +300,6 @@ export default function ClubLogin({ onBack, onLogin }) {
               </div>
             )}
 
-            {/* PASSWORD */}
             <div className="form-group">
               <label>Password</label>
               <div className="input-wrapper">
@@ -359,7 +358,6 @@ export default function ClubLogin({ onBack, onLogin }) {
               : "Don't have an account? Sign up"}
           </button>
 
-          {/* 🔐 SECURITY FOOTER */}
           <div className="club-secured">
             🔐 Secured by <strong>VenueVerse</strong>
           </div>

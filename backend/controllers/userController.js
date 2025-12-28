@@ -41,7 +41,7 @@ exports.register = async (req, res) => {
 };
 
 /* =========================
-   LOGIN (EVERY TIME)
+   LOGIN (EVERY TIME) ✅ FIXED
 ========================= */
 exports.login = async (req, res) => {
   try {
@@ -63,9 +63,25 @@ exports.login = async (req, res) => {
       });
     }
 
-    // 3. Generate token
+    // ⛔ CHECK IF BLOCKED
+    if (user.isBlocked) {
+      return res.status(403).json({
+        msg: "Your account has been blocked. Please contact the administrator.",
+      });
+    }
+
+    // 🕒 UPDATE LAST LOGIN
+    user.lastLogin = new Date();
+    await user.save();
+
+    // 3. Generate token (✅ clubName ADDED)
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      {
+        id: user._id,
+        role: user.role,
+        // 👇 REQUIRED FOR CLUB EVENT APIs
+        clubName: user.role === "club" ? user.name : undefined,
+      },
       process.env.JWT_SECRET || "venueverse_secret",
       { expiresIn: "1d" }
     );
@@ -78,6 +94,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        lastLogin: user.lastLogin, // Return to frontend if needed
       },
     });
   } catch (err) {
