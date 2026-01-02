@@ -16,7 +16,26 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: null
+  },
+  approvalStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: function () {
+      // Only club officials need approval
+      return this.role === "club" ? "pending" : "approved";
+    }
+  },
+  approvedAt: {
+    type: Date,
+    default: null
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    default: null
   }
+}, {
+  timestamps: true  // Adds createdAt and updatedAt
 });
 
 module.exports = mongoose.model("User", userSchema);

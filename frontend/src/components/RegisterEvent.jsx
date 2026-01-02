@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 
@@ -29,6 +29,8 @@ export default function RegisterEvent({ onBack, onRegistered }) {
   });
 
   const [lastRegistration, setLastRegistration] = useState(null);
+  const [availableVenues, setAvailableVenues] = useState([]);
+  const [loadingVenues, setLoadingVenues] = useState(false);
 
   /* ----------------------------------------------------
       HANDLE SUBMIT
@@ -119,23 +121,77 @@ export default function RegisterEvent({ onBack, onRegistered }) {
       TIME SLOTS + VENUES
   ---------------------------------------------------- */
   const timeSlots = [
-    "8:00 A.M. - 12:00 P.M.",
-    "1:00 P.M. - 5:00 P.M.",
-    "6:00 P.M. - 10:00 P.M.",
+    "8:00 A.M. - 10:00 A.M.",
+    "9:00 A.M. - 11:00 A.M",
+    "1:00 P.M. - 4:00 P.M.",
+    "12:00 P.M. - 3:00 P.M.",
     "8:00 A.M. - 6:00 P.M.",
     "Full Day (8:00 A.M. - 10:00 P.M.)",
     "custom",
   ];
 
-  const venues = [
-    "Main Club Hall",
-    "Studio Room A",
-    "Studio Room B",
-    "Recreation Area",
-    "Conference Room",
-    "Outdoor Garden",
-    "Sports Area",
+  const allVenues = [
+    "Audi 1",
+    "Audi 2",
+    "BSN Hall",
+    "Indoor Stadium",
+    "AIML Lab 1",
+    "CSE Lab ",
+    "CSE Lab 2",
+    "PG Lab First Floor",
   ];
+
+  /* ----------------------------------------------------
+      FETCH AVAILABLE VENUES WHEN DATE/TIME CHANGES
+  ---------------------------------------------------- */
+  useEffect(() => {
+    const fetchAvailableVenues = async () => {
+      // Only fetch if both date and time slot are selected
+      if (!formData.eventDate || !formData.timeSlot) {
+        setAvailableVenues([]);
+        return;
+      }
+
+      // Determine the actual time slot value
+      const actualTimeSlot =
+        formData.timeSlot === "custom"
+          ? formData.customStart && formData.customEnd
+            ? `${formData.customStart} - ${formData.customEnd}`
+            : ""
+          : formData.timeSlot;
+
+      // If custom time but not fully specified, don't fetch yet
+      if (!actualTimeSlot) {
+        setAvailableVenues([]);
+        return;
+      }
+
+      setLoadingVenues(true);
+      try {
+        const res = await axios.get(
+          `${ENDPOINTS.EVENTS}/available-venues`,
+          {
+            params: {
+              date: formData.eventDate,
+              timeSlot: actualTimeSlot,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          setAvailableVenues(res.data.availableVenues || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch available venues:", err);
+        // On error, show all venues as fallback
+        setAvailableVenues(allVenues);
+      } finally {
+        setLoadingVenues(false);
+      }
+    };
+
+    fetchAvailableVenues();
+  }, [formData.eventDate, formData.timeSlot, formData.customStart, formData.customEnd]);
 
   return (
     <div className="re-root">
@@ -278,13 +334,24 @@ export default function RegisterEvent({ onBack, onRegistered }) {
                 onChange={(e) =>
                   setFormData({ ...formData, venue: e.target.value })
                 }
+                disabled={!formData.eventDate || !formData.timeSlot || loadingVenues}
               >
-                <option value="">Select venue</option>
-                {venues.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
+                {!formData.eventDate || !formData.timeSlot ? (
+                  <option value="">Please select date and time first</option>
+                ) : loadingVenues ? (
+                  <option value="">Loading available venues...</option>
+                ) : availableVenues.length === 0 ? (
+                  <option value="">No venues available for selected date/time</option>
+                ) : (
+                  <>
+                    <option value="">Select venue</option>
+                    {availableVenues.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 

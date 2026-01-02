@@ -30,6 +30,16 @@ export default function ClubLogin({ onBack, onLogin }) {
   const [enteredOtp, setEnteredOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
 
+  // Forgot Password States
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [resetOtpSent, setResetOtpSent] = useState(false);
+  const [resetOtpVerified, setResetOtpVerified] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   // API handled via import at top
 
   /* ============================
@@ -41,11 +51,20 @@ export default function ClubLogin({ onBack, onLogin }) {
       return;
     }
 
+    if (!fullName) {
+      alert("Enter your club name first!");
+      return;
+    }
+
     try {
       const res = await fetch(`${ENDPOINTS.OTP}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          name: fullName,
+          role: "club"
+        }),
       });
 
       const data = await res.json();
@@ -187,6 +206,113 @@ export default function ClubLogin({ onBack, onLogin }) {
     }
 
     await handleClubLogin();
+  };
+
+  /* ============================
+     FORGOT PASSWORD - SEND OTP
+  ============================ */
+  const handleSendResetOtp = async () => {
+    if (!resetEmail) {
+      alert("Please enter your email");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${ENDPOINTS.USERS}/forgot-password/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setResetOtpSent(true);
+        alert(data.msg || "OTP sent to your email!");
+      } else {
+        alert(data.msg || "Failed to send OTP");
+      }
+    } catch {
+      alert("Server error while sending OTP");
+    }
+  };
+
+  /* ============================
+     FORGOT PASSWORD - VERIFY OTP
+  ============================ */
+  const handleVerifyResetOtp = async () => {
+    if (!resetOtp) {
+      alert("Please enter the OTP");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${ENDPOINTS.USERS}/forgot-password/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail, otp: resetOtp }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setResetOtpVerified(true);
+        alert("OTP verified! Now set your new password.");
+      } else {
+        alert(data.msg || "Invalid OTP");
+      }
+    } catch {
+      alert("Error verifying OTP");
+    }
+  };
+
+  /* ============================
+     FORGOT PASSWORD - RESET PASSWORD
+  ============================ */
+  const handleResetPassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      alert("Please enter and confirm your new password");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${ENDPOINTS.USERS}/forgot-password/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: resetEmail,
+          otp: resetOtp,
+          newPassword
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(data.msg || "Password reset successful! Please login.");
+        setShowForgotPassword(false);
+        setResetEmail("");
+        setResetOtp("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setResetOtpSent(false);
+        setResetOtpVerified(false);
+      } else {
+        alert(data.msg || "Failed to reset password");
+      }
+    } catch {
+      alert("Server error during password reset");
+    }
   };
 
   return (
@@ -358,10 +484,145 @@ export default function ClubLogin({ onBack, onLogin }) {
               : "Don't have an account? Sign up"}
           </button>
 
+          {!isSignUp && (
+            <button
+              className="forgot-password-link"
+              onClick={() => setShowForgotPassword(true)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#a78bfa",
+                cursor: "pointer",
+                fontSize: "14px",
+                marginTop: "10px",
+                textDecoration: "underline"
+              }}
+            >
+              Forgot Password?
+            </button>
+          )}
+
           <div className="club-secured">
             🔐 Secured by <strong>VenueVerse</strong>
           </div>
         </div>
+
+        {/* FORGOT PASSWORD MODAL */}
+        {showForgotPassword && (
+          <div style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000
+          }} onClick={() => setShowForgotPassword(false)}>
+            <div className="club-card" style={{ maxWidth: "500px", margin: "20px" }} onClick={(e) => e.stopPropagation()}>
+              <h2 className="club-title">Reset Password</h2>
+              <p className="club-subtitle">Enter your email to receive an OTP</p>
+
+              <div className="club-form">
+                {/* Step 1: Enter Email */}
+                <div className="form-group">
+                  <label>Email</label>
+                  <div className="input-wrapper">
+                    <Mail className="input-icon" />
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      disabled={resetOtpSent}
+                    />
+                  </div>
+                </div>
+
+                {/* Step 2: Enter OTP */}
+                {resetOtpSent && !resetOtpVerified && (
+                  <div className="form-group">
+                    <label>Enter OTP</label>
+                    <div className="input-wrapper">
+                      <KeyRound className="input-icon" />
+                      <input
+                        value={resetOtp}
+                        onChange={(e) => setResetOtp(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Enter New Password */}
+                {resetOtpVerified && (
+                  <>
+                    <div className="form-group">
+                      <label>New Password</label>
+                      <div className="input-wrapper">
+                        <Lock className="input-icon" />
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <span
+                          className="eye-icon"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                        >
+                          {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Confirm New Password</label>
+                      <div className="input-wrapper">
+                        <Lock className="input-icon" />
+                        <input
+                          type="password"
+                          value={confirmNewPassword}
+                          onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Action Buttons */}
+                <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+                  {!resetOtpSent && (
+                    <button onClick={handleSendResetOtp} className="club-submit-btn">
+                      Send OTP
+                    </button>
+                  )}
+                  {resetOtpSent && !resetOtpVerified && (
+                    <button onClick={handleVerifyResetOtp} className="club-submit-btn">
+                      Verify OTP
+                    </button>
+                  )}
+                  {resetOtpVerified && (
+                    <button onClick={handleResetPassword} className="club-submit-btn">
+                      Reset Password
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmail("");
+                      setResetOtp("");
+                      setNewPassword("");
+                      setConfirmNewPassword("");
+                      setResetOtpSent(false);
+                      setResetOtpVerified(false);
+                    }}
+                    className="club-toggle-btn"
+                    style={{ marginTop: 0 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

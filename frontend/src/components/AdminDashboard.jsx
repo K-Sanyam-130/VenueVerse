@@ -25,9 +25,12 @@ export default function AdminDashboard({
     totalUsers: 0,   // Total Clubs
     activeUsers: 0   // Active Clubs
   });
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
+    fetchPendingUsers();
   }, []);
 
   const fetchStats = async () => {
@@ -44,11 +47,104 @@ export default function AdminDashboard({
     }
   };
 
+  const fetchPendingUsers = async () => {
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/pending-users`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch pending users", err);
+    }
+  };
+
+  const handleUpdateEventStatuses = async () => {
+    if (!confirm("This will update all event statuses based on current date. Continue?")) return;
+
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/update-event-statuses`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`✅ Events updated!\n🟤 PAST: ${data.updated.past}\n🟢 LIVE: ${data.updated.live}\n🔵 UPCOMING: ${data.updated.upcoming}\n📊 Total: ${data.updated.total}`);
+        fetchStats(); // Refresh stats
+      } else {
+        const data = await res.json();
+        alert(data.msg || "Failed to update event statuses");
+      }
+    } catch (err) {
+      console.error("Failed to update events", err);
+      alert("Error updating event statuses");
+    }
+  };
+
+  const handleApproveUser = async (userId) => {
+    if (!confirm("Are you sure you want to approve this user?")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/approve-user/${userId}`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+
+      if (res.ok) {
+        alert("User approved successfully!");
+        fetchPendingUsers(); // Refresh list
+        fetchStats(); // Update stats
+      } else {
+        const data = await res.json();
+        alert(data.msg || "Failed to approve user");
+      }
+    } catch (err) {
+      console.error("Failed to approve user", err);
+      alert("Error approving user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectUser = async (userId) => {
+    const reason = prompt("Please enter a reason for rejection:");
+    if (!reason) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/reject-user/${userId}`, {
+        method: "POST",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      });
+
+      if (res.ok) {
+        alert("User rejected successfully!");
+        fetchPendingUsers(); // Refresh list
+      } else {
+        const data = await res.json();
+        alert(data.msg || "Failed to reject user");
+      }
+    } catch (err) {
+      console.error("Failed to reject user", err);
+      alert("Error rejecting user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const stats = [
     { label: "Total Events", value: dashboardStats.totalEvents, icon: Calendar, color: "cyan" },
     { label: "Events Going On", value: dashboardStats.activeEvents, icon: Activity, color: "lime" },
     { label: "Club Officials", value: dashboardStats.totalUsers, icon: UserCheck, color: "amber" },
-    { label: "System Alerts", value: "3", icon: AlertTriangle, color: "pink" },
+    { label: "Pending Approvals", value: pendingUsers.length, icon: AlertTriangle, color: "pink" },
   ];
 
   const recentActivity = [
@@ -78,6 +174,7 @@ export default function AdminDashboard({
 
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "pending", label: "Pending Users", icon: Users },
     { id: "users", label: "User Management", icon: Users, isExternal: true },
     { id: "events", label: "Event Management", icon: Calendar, isExternal: true },
     { id: "system", label: "System Settings", icon: Activity },
@@ -207,13 +304,117 @@ export default function AdminDashboard({
                     </div>
                   ))}
                 </div>
+
+                {/* UPDATE EVENT STATUSES BUTTON */}
+                <button
+                  onClick={handleUpdateEventStatuses}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    marginTop: "16px",
+                    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                >
+                  <Activity size={16} />
+                  Update Event Statuses
+                </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* PENDING USERS SECTION */}
+        {activeSection === "pending" && (
+          <div className="overview-wrapper">
+            <div className="mini-card" style={{ maxWidth: "100%" }}>
+              <h3 className="mini-title">
+                <Users size={20} className="blue-text" />
+                Pending Club Official Registrations
+              </h3>
+
+              {pendingUsers.length === 0 ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>
+                  <UserCheck size={48} style={{ margin: "0 auto 16px" }} />
+                  <p>No pending registrations at this time</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="pending-users-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered On</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingUsers.map((user) => (
+                        <tr key={user._id}>
+                          <td>{user.name}</td>
+                          <td>{user.email}</td>
+                          <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <button
+                                onClick={() => handleApproveUser(user._id)}
+                                disabled={loading}
+                                style={{
+                                  padding: "6px 16px",
+                                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  cursor: loading ? "not-allowed" : "pointer",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  opacity: loading ? 0.6 : 1
+                                }}
+                              >
+                                ✓ Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectUser(user._id)}
+                                disabled={loading}
+                                style={{
+                                  padding: "6px 16px",
+                                  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  cursor: loading ? "not-allowed" : "pointer",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  opacity: loading ? 0.6 : 1
+                                }}
+                              >
+                                ✗ Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* PLACEHOLDER */}
         {activeSection !== "overview" &&
+          activeSection !== "pending" &&
           activeSection !== "users" &&
           activeSection !== "events" && (
             <div className="placeholder">

@@ -68,8 +68,21 @@ export default function ExistingEvents({ onBack }) {
       ? events
       : events.filter((e) => e.club === selectedClub);
 
-  const ongoing = filteredEvents.filter((e) => e.eventType === "LIVE");
-  const upcoming = filteredEvents.filter((e) => e.eventType === "UPCOMING");
+  // Filter by date instead of eventType
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const ongoing = filteredEvents.filter((e) => {
+    const eventDate = new Date(e.date);
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate.getTime() === today.getTime();
+  });
+
+  const upcoming = filteredEvents.filter((e) => {
+    const eventDate = new Date(e.date);
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate.getTime() > today.getTime();
+  });
 
   return (
     <div className="events-container">
@@ -218,8 +231,8 @@ function EventCard({ event, isOngoing }) {
                     percent < 70
                       ? "#4ade80"
                       : percent < 90
-                      ? "#facc15"
-                      : "#ef4444",
+                        ? "#facc15"
+                        : "#ef4444",
                 }}
               ></div>
             </div>

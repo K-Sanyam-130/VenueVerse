@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   UserPlus,
   CheckCircle,
@@ -6,12 +6,42 @@ import {
   Users,
   MapPin,
   ArrowLeft,
-  LogOut,
   Sparkles,
+  User,
+  Mail,
+  Calendar,
 } from "lucide-react";
 import "./ClubDashboard.css";
+import { ENDPOINTS } from "../api";
+import logo from "../assets/venueverse-logo.jpg";
 
 export default function Dashboard({ onLogout, onNavigate, onBack }) {   // ✅ DEFAULT EXPORT FIXED
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [clubStats, setClubStats] = useState({
+    name: "",
+    email: "",
+    totalEvents: 0
+  });
+
+  useEffect(() => {
+    fetchClubStats();
+  }, []);
+
+  const fetchClubStats = async () => {
+    try {
+      const token = localStorage.getItem("clubToken");
+      const res = await fetch(`${ENDPOINTS.USERS}/club/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setClubStats(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch club stats", err);
+    }
+  };
+
   const menuOptions = [
     {
       title: "Register",
@@ -89,7 +119,12 @@ export default function Dashboard({ onLogout, onNavigate, onBack }) {   // ✅ D
 
             <div className="cv-logo" aria-hidden>
               <div className="cv-logo-rotator">
-                <MapPin className="cv-logo-icon" />
+                <img src={logo} alt="VenueVerse" className="cv-logo-icon" style={{
+                  width: "40px",
+                  height: "40px",
+                  objectFit: "cover",
+                  borderRadius: "8px"
+                }} />
               </div>
             </div>
 
@@ -100,14 +135,78 @@ export default function Dashboard({ onLogout, onNavigate, onBack }) {   // ✅ D
           </div>
 
           <div className="cv-header-actions">
-            <button
-              className="cv-logout-btn"
-              onClick={() => onLogout && onLogout()}
-              aria-label="Logout"
+            {/* Profile Icon */}
+            <div
+              className="profile-button"
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              style={{
+                cursor: "pointer",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                padding: "10px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "15px",
+                position: "relative"
+              }}
             >
-              <LogOut className="cv-logout-icon" />
-              <span>Logout</span>
-            </button>
+              <User size={20} color="white" />
+            </div>
+
+            {/* Profile Dropdown */}
+            {showProfileDropdown && (
+              <div style={{
+                position: "absolute",
+                top: "70px",
+                right: "90px",
+                background: "rgba(15, 23, 42, 0.95)",
+                border: "1px solid rgba(148, 163, 184, 0.3)",
+                borderRadius: "12px",
+                padding: "20px",
+                minWidth: "280px",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                backdropFilter: "blur(12px)",
+                zIndex: 1000
+              }}>
+                <div style={{
+                  borderBottom: "1px solid rgba(148, 163, 184, 0.2)",
+                  paddingBottom: "12px",
+                  marginBottom: "12px"
+                }}>
+                  <div style={{
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    color: "#e2e8f0",
+                    marginBottom: "4px"
+                  }}>
+                    {clubStats.name}
+                  </div>
+                  <div style={{
+                    fontSize: "12px",
+                    color: "#94a3b8"
+                  }}>
+                    Club Official
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Mail size={16} color="#60a5fa" />
+                    <div style={{ color: "#cbd5e1", fontSize: "14px" }}>
+                      {clubStats.email}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Calendar size={16} color="#a78bfa" />
+                    <div style={{ color: "#cbd5e1", fontSize: "14px" }}>
+                      <strong>{clubStats.totalEvents}</strong> Events Registered
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>

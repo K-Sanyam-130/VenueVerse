@@ -1,4 +1,7 @@
-export const API_BASE_URL = "http://localhost:5000/api";
+// Use environment variable in production, fallback to localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+export { API_BASE_URL };
 
 export const ENDPOINTS = {
     USERS: `${API_BASE_URL}/users`,

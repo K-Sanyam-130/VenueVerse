@@ -14,13 +14,16 @@ cron.schedule("0 0 * * *", async () => {
 
     const today = normalizeDate(new Date());
 
-    // 🔴 DELETE past events
-    const deleteResult = await Event.deleteMany({
-      status: "APPROVED",
-      date: { $lt: today }
-    });
+    // 🟤 MARK past events as PAST (don't delete)
+    const pastResult = await Event.updateMany(
+      {
+        status: "APPROVED",
+        date: { $lt: today }
+      },
+      { $set: { eventType: "PAST" } }
+    );
 
-    console.log(`🗑️ Deleted ${deleteResult.deletedCount} past events`);
+    console.log(`🟤 PAST events updated: ${pastResult.modifiedCount}`);
 
     // 🟢 SET LIVE for today's events
     const liveResult = await Event.updateMany(

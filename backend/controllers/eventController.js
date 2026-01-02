@@ -390,3 +390,118 @@ exports.getAllApprovedEvents = async (req, res) => {
     });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC: Get Available Venues for a Given Date and Time
+|--------------------------------------------------------------------------
+*/
+exports.getAvailableVenues = async (req, res) => {
+  try {
+    const { date, timeSlot } = req.query;
+
+    // All possible venues
+    const allVenues = [
+      "Audi 1",
+      "Audi 2",
+      "BSN Hall",
+      "Indoor Stadium",
+      "AIML Lab 1",
+      "CSE Lab ",
+      "CSE Lab 2",
+      "PG Lab First Floor",
+    ];
+
+    // If no date or time provided, return all venues
+    if (!date || !timeSlot) {
+      return res.json({
+        success: true,
+        availableVenues: allVenues
+      });
+    }
+
+    // Find all APPROVED events for the given date
+    const bookedEvents = await Event.find({
+      date,
+      status: "APPROVED"
+    });
+
+    // Helper function to check if two time slots overlap
+    const timeSlotsOverlap = (slot1, slot2) => {
+      // If either is a full day booking, they overlap
+      if (
+        slot1.includes("Full Day") ||
+        slot2.includes("Full Day") ||
+        slot1.includes("8:00 A.M. - 10:00 P.M.") ||
+        slot2.includes("8:00 A.M. - 10:00 P.M.")
+      ) {
+        return true;
+      }
+
+      // If slots are identical
+      if (slot1 === slot2) {
+        return true;
+      }
+
+      // Parse time strings to compare ranges
+      const parseTime = (timeStr) => {
+        const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(A\.M\.|P\.M\.)/i);
+        if (!match) return null;
+
+        let hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        const period = match[3].toUpperCase();
+
+        if (period === "P.M." && hours !== 12) hours += 12;
+        if (period === "A.M." && hours === 12) hours = 0;
+
+        return hours * 60 + minutes;
+      };
+
+      const extractRange = (slot) => {
+        const parts = slot.split("-").map(s => s.trim());
+        if (parts.length !== 2) return null;
+
+        const start = parseTime(parts[0]);
+        const end = parseTime(parts[1]);
+
+        return start !== null && end !== null ? { start, end } : null;
+      };
+
+      const range1 = extractRange(slot1);
+      const range2 = extractRange(slot2);
+
+      if (!range1 || !range2) return false;
+
+      // Check for overlap: slots overlap if one starts before the other ends
+      return (
+        (range1.start < range2.end && range1.end > range2.start)
+      );
+    };
+
+    // Filter out booked venues
+    const bookedVenues = new Set();
+
+    bookedEvents.forEach(event => {
+      if (timeSlotsOverlap(event.timeSlot, timeSlot)) {
+        bookedVenues.add(event.venue);
+      }
+    });
+
+    const availableVenues = allVenues.filter(
+      venue => !bookedVenues.has(venue)
+    );
+
+    res.json({
+      success: true,
+      availableVenues,
+      bookedVenues: Array.from(bookedVenues)
+    });
+  } catch (err) {
+    console.error("GET AVAILABLE VENUES ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch available venues"
+    });
+  }
+};

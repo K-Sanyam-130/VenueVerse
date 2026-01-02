@@ -89,7 +89,8 @@
   position: relative;
   z-index: 5;
 
-  padding: 120px 40px 40px; /* FIX: space for header */
+  padding: 120px 40px 40px;
+  /* FIX: space for header */
   max-width: 1500px;
   margin: 0 auto;
 }
@@ -182,10 +183,25 @@
 }
 
 /* Stat Icon Colors */
-.cyan { background: rgba(34, 211, 238, 0.25); color: #22d3ee; }
-.lime { background: rgba(163, 230, 53, 0.25); color: #a3e635; }
-.amber { background: rgba(251, 191, 36, 0.25); color: #fbbf24; }
-.pink { background: rgba(244, 114, 182, 0.25); color: #f472b6; }
+.cyan {
+  background: rgba(34, 211, 238, 0.25);
+  color: #22d3ee;
+}
+
+.lime {
+  background: rgba(163, 230, 53, 0.25);
+  color: #a3e635;
+}
+
+.amber {
+  background: rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+}
+
+.pink {
+  background: rgba(244, 114, 182, 0.25);
+  color: #f472b6;
+}
 
 .stat-label {
   font-size: 13px;
@@ -239,9 +255,26 @@
   margin-bottom: 18px;
 }
 
-.dot-blue { width: 10px; height: 10px; background: #60a5fa; border-radius: 50%; }
-.dot-yellow { width: 10px; height: 10px; background: #facc15; border-radius: 50%; }
-.dot-red { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; }
+.dot-blue {
+  width: 10px;
+  height: 10px;
+  background: #60a5fa;
+  border-radius: 50%;
+}
+
+.dot-yellow {
+  width: 10px;
+  height: 10px;
+  background: #facc15;
+  border-radius: 50%;
+}
+
+.dot-red {
+  width: 10px;
+  height: 10px;
+  background: #ef4444;
+  border-radius: 50%;
+}
 
 /* ------------------------------------------------------
    VENUE CARD (PURPLE)
@@ -289,4 +322,47 @@
 .placeholder {
   margin-top: 40px;
   text-align: center;
+}
+
+/* ------------------------------------------------------
+   PENDING USERS TABLE
+------------------------------------------------------ */
+.pending-users-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
+}
+
+.pending-users-table thead th {
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(56, 189, 248, 0.1);
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.pending-users-table thead th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.pending-users-table thead th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.pending-users-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.pending-users-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.pending-users-table tbody tr:last-child td {
+  border-bottom: none;
 }

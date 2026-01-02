@@ -1,13 +1,42 @@
 const nodemailer = require("nodemailer");
 const Otp = require("../model/Otp");
+const User = require("../model/User");
 
 // SEND OTP
 exports.sendOtp = async (req, res) => {
   console.log("🔥 OTP SEND ROUTE HIT"); // debug 1
 
   try {
-    const { email } = req.body;
+    const { email, name, role } = req.body;
     console.log("📨 Email received:", email); // debug 2
+    console.log("👤 Name:", name, "Role:", role);
+
+    // VALIDATION: Only validate for club role
+    if (role === "club") {
+      // Check if club name already exists (case-insensitive)
+      const existingClub = await User.findOne({
+        role: "club",
+        name: { $regex: new RegExp(`^${name}$`, 'i') }
+      });
+
+      if (existingClub) {
+        return res.status(400).json({
+          msg: "Club name already registered. Please use a different club name."
+        });
+      }
+
+      // Check if email is already used by another club
+      const existingEmail = await User.findOne({
+        role: "club",
+        email: email
+      });
+
+      if (existingEmail) {
+        return res.status(400).json({
+          msg: "Email already existed"
+        });
+      }
+    }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("🔢 OTP generated:", otpCode); // debug 3

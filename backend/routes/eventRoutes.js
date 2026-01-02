@@ -7,7 +7,8 @@ const {
   getApprovedEventsForClub,
   getAllApprovedEvents,
   cancelEventByClub,
-  requestVenueChange        // ✅ NEW
+  requestVenueChange,       // ✅ NEW
+  getAvailableVenues        // ✅ NEW: Get available venues by date/time
 } = require("../controllers/eventController");
 
 const auth = require("../middleware/auth");
@@ -41,5 +42,8 @@ router.put("/club/venue-change/:id", auth, requestVenueChange);
 
 // 🌍 Landing page / Students – ALL approved events
 router.get("/approved", getAllApprovedEvents);
+
+// 🏢 Get available venues by date and time
+router.get("/available-venues", getAvailableVenues);
 
 module.exports = router;
