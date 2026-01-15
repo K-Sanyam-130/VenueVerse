@@ -22,17 +22,28 @@ export default function CancelBooking({ onBack, onLogout }) {
   const token = localStorage.getItem("clubToken");
 
   /* ----------------------------------------------------
-      FETCH CLUB BOOKINGS
+      FETCH CLUB BOOKINGS (APPROVED & UPCOMING)
   ---------------------------------------------------- */
   const fetchBookings = async () => {
     try {
-      const res = await fetch(`${ENDPOINTS.EVENTS}/club`, {
+      // ✅ CHANGE: Fetch only approved events
+      const res = await fetch(`${ENDPOINTS.EVENTS}/club/approved`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
 
       if (Array.isArray(data)) {
-        setBookings(data);
+        // ✅ CHANGE: Filter for upcoming events only (including today)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcomingEvents = data.filter((event) => {
+          const eventDate = new Date(event.date);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate.getTime() >= today.getTime();
+        });
+
+        setBookings(upcomingEvents);
       } else {
         setBookings([]);
       }
@@ -113,7 +124,7 @@ export default function CancelBooking({ onBack, onLogout }) {
           <div>
             <h1 className="cb-title">Cancel Bookings</h1>
             <p className="cb-subtitle">
-              Cancel existing event bookings and registrations
+              Cancel existing approved upcoming event bookings
             </p>
           </div>
         </div>

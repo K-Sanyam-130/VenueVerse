@@ -33,7 +33,17 @@ export default function BookingStatus({ onBack }) {
         const data = await res.json();
 
         if (Array.isArray(data)) {
-          setBookings(data);
+          // ✅ CHANGE: Filter for upcoming events only (including today)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const upcomingEvents = data.filter((event) => {
+            const eventDate = new Date(event.date);
+            eventDate.setHours(0, 0, 0, 0);
+            return eventDate.getTime() >= today.getTime();
+          });
+
+          setBookings(upcomingEvents);
         } else {
           setBookings([]);
         }
@@ -63,7 +73,7 @@ export default function BookingStatus({ onBack }) {
   };
 
   const adminContacts = [
-    { name: "Kanishka Krish", phone: "+91 9876500011" },
+    { name: "Kanishka Panda", phone: "+91 9876500011" },
     { name: "Sanyam Khajuria", phone: "+91 9876500012" },
     { name: "Kevan Patira", phone: "+91 9876500013" },
     { name: "Krish Raj", phone: "+91 9876500014" },
@@ -93,7 +103,7 @@ export default function BookingStatus({ onBack }) {
               <div>
                 <h1 className="bs-page-title">Booking Status</h1>
                 <p className="bs-page-sub">
-                  Track approval status of your event requests
+                  Track approval status of your upcoming event requests
                 </p>
               </div>
             </div>
@@ -125,7 +135,7 @@ export default function BookingStatus({ onBack }) {
           {/* BOOKINGS */}
           <div className="bs-list">
             {bookings.length === 0 ? (
-              <p className="bs-empty">No event bookings yet.</p>
+              <p className="bs-empty">No upcoming event bookings found.</p>
             ) : (
               bookings.map((b) => (
                 <div key={b._id} className="bs-card-horizontal">

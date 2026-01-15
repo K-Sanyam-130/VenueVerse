@@ -1,9 +1,11 @@
 const Admin = require("../model/Admin");
 const Event = require("../model/Event");
+const Receipt = require("../model/Receipt");
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../utils/sendEmail");
+const { generateReceiptPDF } = require("../utils/generateReceipt");
 
 /* =========================
    ADMIN LOGIN
@@ -29,7 +31,7 @@ exports.adminLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: admin._id, role: "admin" },
+      { id: admin._id, role: "admin", email: admin.email, name: admin.name },
       process.env.JWT_SECRET || "venueverse_secret",
       { expiresIn: "1d" }
     );
@@ -40,7 +42,8 @@ exports.adminLogin = async (req, res) => {
       token,
       admin: {
         id: admin._id,
-        email: admin.email
+        email: admin.email,
+        name: admin.name
       }
     });
   } catch (err) {
@@ -66,7 +69,18 @@ exports.getEventsByStatus = async (req, res) => {
       });
     }
 
-    const events = await Event.find({ status }).sort({ createdAt: -1 });
+    // Get admin's managed venues
+    const admin = await Admin.findById(req.user.id);
+    const adminVenues = admin?.venues || [];
+
+    // If admin has no venues, they see ALL events (super admin)
+    // Otherwise, filter by their venues
+    const query = { status };
+    if (adminVenues.length > 0) {
+      query.venue = { $in: adminVenues };
+    }
+
+    const events = await Event.find(query).sort({ createdAt: -1 });
     res.json(events);
   } catch (err) {
     console.error("GET EVENTS BY STATUS ERROR:", err);
@@ -104,9 +118,54 @@ exports.approveEvent = async (req, res) => {
 
     await event.save();
 
+    // Get admin name from request (from JWT token)
+    const adminName = req.user?.name || "Admin";
+    const approvalDate = new Date();
+
+    let pdfPath = null;
+    let receiptRecord = null;
+
+    try {
+      // Generate receipt PDF
+      console.log("📄 Generating receipt PDF...");
+      pdfPath = await generateReceiptPDF({
+        eventName: event.eventName,
+        clubName: event.clubName,
+        memberEmail: event.email,
+        approvedBy: adminName,
+        approvalDate: approvalDate,
+        venue: event.venue,
+        date: event.date,
+        timeSlot: event.timeSlot,
+        eventId: event._id.toString(),
+      });
+
+      console.log(`✅ Receipt PDF generated: ${pdfPath}`);
+
+      // Save receipt record to database
+      receiptRecord = new Receipt({
+        eventId: event._id,
+        eventName: event.eventName,
+        clubName: event.clubName,
+        memberEmail: event.email,
+        approvedBy: adminName,
+        approvalDate: approvalDate,
+        pdfPath: pdfPath,
+        venue: event.venue,
+        date: event.date,
+        timeSlot: event.timeSlot,
+      });
+
+      await receiptRecord.save();
+      console.log("✅ Receipt record saved to database");
+    } catch (receiptErr) {
+      console.error("❌ Receipt generation failed:", receiptErr.message);
+      // Continue with approval even if receipt generation fails
+    }
+
     // Send approval email to club official
     try {
-      await sendEmail({
+      const emailOptions = {
         to: event.email,
         subject: "🎉 Event Approved – VenueVerse",
         html: `
@@ -123,21 +182,38 @@ exports.approveEvent = async (req, res) => {
             <li><b>Status:</b> ${event.eventType}</li>
           </ul>
           
+          <p><b>Approved by:</b> ${adminName}</p>
+          <hr />
+          <p>Please find the attached receipt for your records. You can also download it from your club dashboard.</p>
           <p>Your event is now published and visible to students on the VenueVerse platform.</p>
           <p>Thank you for using VenueVerse!</p>
         `
-      });
+      };
+
+      // Attach PDF if it was generated successfully
+      if (pdfPath) {
+        emailOptions.attachments = [
+          {
+            filename: `receipt_${event.eventName.replace(/\s+/g, "_")}.pdf`,
+            path: pdfPath,
+          },
+        ];
+      }
+
+      await sendEmail(emailOptions);
+      console.log("✅ Approval email sent with receipt attachment");
     } catch (e) {
-      console.error("EMAIL FAILED:", e.message);
+      console.error("❌ EMAIL FAILED:", e.message);
     }
 
     res.json({
       success: true,
       msg: "Event approved successfully",
-      event
+      event,
+      receiptGenerated: !!pdfPath,
     });
   } catch (err) {
-    console.error("APPROVE EVENT ERROR:", err);
+    console.error("❌ APPROVE EVENT ERROR:", err);
     res.status(500).json({
       success: false,
       msg: "Failed to approve event"
@@ -222,9 +298,19 @@ exports.rejectEvent = async (req, res) => {
 ========================= */
 exports.getVenueChangeRequests = async (req, res) => {
   try {
-    const events = await Event.find({
-      "venueChange.status": "PENDING"
-    }).sort({ createdAt: -1 });
+    // Get admin's managed venues
+    const admin = await Admin.findById(req.user.id);
+    const adminVenues = admin?.venues || [];
+
+    const query = { "venueChange.status": "PENDING" };
+
+    // If admin has venues, filter by requested venues
+    // If adminVenues is empty, they see all (Super Admin)
+    if (adminVenues.length > 0) {
+      query["venueChange.requestedVenue"] = { $in: adminVenues };
+    }
+
+    const events = await Event.find(query).sort({ createdAt: -1 });
 
     res.json(events);
   } catch (err) {
@@ -644,3 +730,179 @@ exports.getSystemStats = async (req, res) => {
     res.status(500).json({ success: false, msg: "Failed to fetch stats" });
   }
 };
+
+/* =========================
+   ⭐ ADMIN PROFILE MANAGEMENT
+========================= */
+
+// Get Admin Profile
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.id).select("-password");
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        msg: "Admin not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      admin
+    });
+  } catch (err) {
+    console.error("GET ADMIN PROFILE ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to fetch profile"
+    });
+  }
+};
+
+// Update Admin Profile
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const { name, department } = req.body;
+
+    const admin = await Admin.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        msg: "Admin not found"
+      });
+    }
+
+    if (name) admin.name = name;
+    if (department !== undefined) admin.department = department;
+
+    await admin.save();
+
+    res.json({
+      success: true,
+      msg: "Profile updated successfully",
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        department: admin.department,
+        venues: admin.venues
+      }
+    });
+  } catch (err) {
+    console.error("UPDATE ADMIN PROFILE ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to update profile"
+    });
+  }
+};
+
+/* =========================
+   ⭐ VENUE MANAGEMENT
+========================= */
+
+// Get Admin's Venues
+exports.getAdminVenues = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        msg: "Admin not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      venues: admin.venues || []
+    });
+  } catch (err) {
+    console.error("GET ADMIN VENUES ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to fetch venues"
+    });
+  }
+};
+
+// Add Venue to Admin
+exports.addVenue = async (req, res) => {
+  try {
+    const { venue } = req.body;
+
+    if (!venue || venue.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        msg: "Venue name is required"
+      });
+    }
+
+    const admin = await Admin.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        msg: "Admin not found"
+      });
+    }
+
+    // Check if venue already exists
+    if (admin.venues.includes(venue)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Venue already exists in your managed venues"
+      });
+    }
+
+    admin.venues.push(venue);
+    await admin.save();
+
+    res.json({
+      success: true,
+      msg: "Venue added successfully",
+      venues: admin.venues
+    });
+  } catch (err) {
+    console.error("ADD VENUE ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to add venue"
+    });
+  }
+};
+
+// Remove Venue from Admin
+exports.removeVenue = async (req, res) => {
+  try {
+    const { venue } = req.params;
+
+    const admin = await Admin.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        msg: "Admin not found"
+      });
+    }
+
+    // Remove venue from array
+    admin.venues = admin.venues.filter(v => v !== venue);
+    await admin.save();
+
+    res.json({
+      success: true,
+      msg: "Venue removed successfully",
+      venues: admin.venues
+    });
+  } catch (err) {
+    console.error("REMOVE VENUE ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to remove venue"
+    });
+  }
+};
+

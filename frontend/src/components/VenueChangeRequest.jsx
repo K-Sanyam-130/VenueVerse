@@ -55,19 +55,39 @@ export default function VenueChangeRequest({ onBack }) {
   }, []);
 
   // Fetch APPROVED events for this club
-  // Fetch APPROVED events for this club
-  const fetchApprovedEvents = async () => {
+  // Fetch APPROVED or PENDING events (UPCOMING only)
+  const fetchClubEvents = async () => {
     try {
       const user = getUser();
       const name = user?.name;
 
       if (!name) return;
 
-      const res = await fetch(`${ENDPOINTS.EVENTS}/club/approved?clubName=${encodeURIComponent(name)}`, {
+      // ✅ CHANGE: Fetch ALL events for club to filter client-side
+      const res = await fetch(`${ENDPOINTS.EVENTS}/club?clubName=${encodeURIComponent(name)}`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
-      if (res.ok) setEvents(data);
+
+      if (res.ok && Array.isArray(data)) {
+        // ✅ CHANGE: Filter for APPROVED/PENDING and UPCOMING
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const validEvents = data.filter(e => {
+          // Status Check
+          const isStatusValid = ["APPROVED", "PENDING"].includes(e.status);
+
+          // Date Check
+          const eventDate = new Date(e.date);
+          eventDate.setHours(0, 0, 0, 0);
+          const isUpcoming = eventDate.getTime() >= today.getTime();
+
+          return isStatusValid && isUpcoming;
+        });
+
+        setEvents(validEvents);
+      }
     } catch (err) {
       console.error("Failed to fetch events", err);
     }
@@ -91,7 +111,7 @@ export default function VenueChangeRequest({ onBack }) {
 
   useEffect(() => {
     if (clubId) {
-      fetchApprovedEvents();
+      fetchClubEvents();
       fetchRequests();
     }
   }, [clubId, fetchRequests]);
@@ -200,7 +220,7 @@ export default function VenueChangeRequest({ onBack }) {
                 >
                   <option value="">Choose event</option>
                   {events.length === 0 ? (
-                    <option disabled>No approved upcoming events found</option>
+                    <option disabled>No eligible upcoming events found</option>
                   ) : (
                     events.map((e) => (
                       <option key={e._id} value={e._id}>
@@ -211,7 +231,7 @@ export default function VenueChangeRequest({ onBack }) {
                 </select>
                 {events.length === 0 && (
                   <p className="vcr-hint">
-                    * Only <strong>approved</strong> and <strong>upcoming</strong> events can request a venue change.
+                    * Only <strong>approved</strong> or <strong>pending</strong> upcoming events can request a venue change.
                     Please check your <span style={{ color: '#a855f7', cursor: 'pointer' }} onClick={() => window.location.href = '/club/bookings'}>Booking Status</span>.
                   </p>
                 )}

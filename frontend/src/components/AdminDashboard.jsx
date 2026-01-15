@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   BarChart3,
   Users,
+  User,
   Calendar,
   UserCheck,
   AlertTriangle,
@@ -17,6 +18,7 @@ export default function AdminDashboard({
   onLogout,
   onUserManagement,
   onEventManagement,
+  onProfile,
 }) {
   const [activeSection, setActiveSection] = useState("overview");
   const [dashboardStats, setDashboardStats] = useState({
@@ -177,6 +179,7 @@ export default function AdminDashboard({
     { id: "pending", label: "Pending Users", icon: Users },
     { id: "users", label: "User Management", icon: Users, isExternal: true },
     { id: "events", label: "Event Management", icon: Calendar, isExternal: true },
+    { id: "profile", label: "Profile", icon: User, isExternal: true },
     { id: "system", label: "System Settings", icon: Activity },
   ];
 
@@ -217,6 +220,7 @@ export default function AdminDashboard({
                   if (isExternal) {
                     if (tab.id === "users") onUserManagement();
                     if (tab.id === "events") onEventManagement();
+                    if (tab.id === "profile") onProfile();
                   } else {
                     setActiveSection(tab.id);
                   }

@@ -18,7 +18,12 @@ const {
    getPendingUsers,            // ⭐ USER APPROVAL
    approveUser,                // ⭐ USER APPROVAL
    rejectUser,                 // ⭐ USER APPROVAL
-   updateEventStatuses         // ⭐ MANUAL EVENT UPDATE
+   updateEventStatuses,        // ⭐ MANUAL EVENT UPDATE
+   getAdminProfile,            // ⭐ PROFILE
+   updateAdminProfile,         // ⭐ PROFILE
+   getAdminVenues,             // ⭐ VENUE MANAGEMENT
+   addVenue,                   // ⭐ VENUE MANAGEMENT
+   removeVenue                 // ⭐ VENUE MANAGEMENT
 } = require("../controllers/adminController");
 
 /*
@@ -92,7 +97,23 @@ router.post("/update-event-statuses", auth, updateEventStatuses);
 /* =========================
    ⭐ DASHBOARD STATS
 ========================= */
+/* =========================
+   ⭐ DASHBOARD STATS
+========================= */
 router.get("/stats", auth, getSystemStats);
+
+/* =========================
+   ⭐ ADMIN PROFILE
+========================= */
+router.get("/profile", auth, getAdminProfile);
+router.put("/profile", auth, updateAdminProfile);
+
+/* =========================
+   ⭐ VENUE MANAGEMENT
+========================= */
+router.get("/venues", auth, getAdminVenues);
+router.post("/venues", auth, addVenue);
+router.delete("/venues/:venue", auth, removeVenue);
 
 console.log("🔍 adminRoutes.js loaded");
 console.log("Routes registered:");

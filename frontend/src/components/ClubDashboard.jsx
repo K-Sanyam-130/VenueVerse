@@ -10,6 +10,7 @@ import {
   User,
   Mail,
   Calendar,
+  FileText,
 } from "lucide-react";
 import "./ClubDashboard.css";
 import { ENDPOINTS } from "../api";
@@ -80,6 +81,14 @@ export default function Dashboard({ onLogout, onNavigate, onBack }) {   // ✅ D
       icon: MapPin,
       colorClass: "option-orange",
       action: () => onNavigate && onNavigate("venue-change-request"),
+    },
+
+    {
+      title: "Receipts",
+      description: "View and download event approval receipts",
+      icon: FileText,
+      colorClass: "option-blue",
+      action: () => onNavigate && onNavigate("receipts"),
     },
   ];
 

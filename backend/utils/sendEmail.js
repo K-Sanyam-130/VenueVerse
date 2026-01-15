@@ -8,11 +8,18 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-exports.sendEmail = async ({ to, subject, html }) => {
-  await transporter.sendMail({
+exports.sendEmail = async ({ to, subject, html, attachments = [] }) => {
+  const mailOptions = {
     from: `"VenueVerse Admin" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html
-  });
+  };
+
+  // Add attachments if provided
+  if (attachments && attachments.length > 0) {
+    mailOptions.attachments = attachments;
+  }
+
+  await transporter.sendMail(mailOptions);
 };

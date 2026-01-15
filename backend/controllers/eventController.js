@@ -1,5 +1,7 @@
 const Event = require("../model/Event");
+const Receipt = require("../model/Receipt");
 const { sendEmail } = require("../utils/sendEmail");
+const { generateReceiptPDF } = require("../utils/generateReceipt");
 
 /*
 |--------------------------------------------------------------------------
@@ -193,14 +195,14 @@ exports.requestVenueChange = async (req, res) => {
     const event = await Event.findOne({
       _id: req.params.id,
       clubName,
-      status: "APPROVED",
+      status: { $in: ["APPROVED", "PENDING"] },
       eventType: "UPCOMING"
     });
 
     if (!event) {
       return res.status(400).json({
         success: false,
-        message: "Only approved upcoming events can request venue change"
+        message: "Only approved or pending upcoming events can request venue change"
       });
     }
 
@@ -287,8 +289,53 @@ exports.approveEvent = async (req, res) => {
 
     await event.save();
 
+    // Get admin email from request (from JWT token)
+    const adminEmail = req.user?.email || "admin@venueverse.com";
+    const approvalDate = new Date();
+
+    let pdfPath = null;
+    let receiptRecord = null;
+
     try {
-      await sendEmail({
+      // Generate receipt PDF
+      console.log("📄 Generating receipt PDF...");
+      pdfPath = await generateReceiptPDF({
+        eventName: event.eventName,
+        clubName: event.clubName,
+        memberEmail: event.email,
+        approvedBy: adminEmail,
+        approvalDate: approvalDate,
+        venue: event.venue,
+        date: event.date,
+        timeSlot: event.timeSlot,
+        eventId: event._id.toString(),
+      });
+
+      console.log(`✅ Receipt PDF generated: ${pdfPath}`);
+
+      // Save receipt record to database
+      receiptRecord = new Receipt({
+        eventId: event._id,
+        eventName: event.eventName,
+        clubName: event.clubName,
+        memberEmail: event.email,
+        approvedBy: adminEmail,
+        approvalDate: approvalDate,
+        pdfPath: pdfPath,
+        venue: event.venue,
+        date: event.date,
+        timeSlot: event.timeSlot,
+      });
+
+      await receiptRecord.save();
+      console.log("✅ Receipt record saved to database");
+    } catch (receiptErr) {
+      console.error("❌ Receipt generation failed:", receiptErr.message);
+      // Continue with approval even if receipt generation fails
+    }
+
+    try {
+      const emailOptions = {
         to: event.email,
         subject: "🎉 Event Approved – VenueVerse",
         html: `
@@ -297,18 +344,36 @@ exports.approveEvent = async (req, res) => {
           <p><b>Date:</b> ${event.date}</p>
           <p><b>Time:</b> ${event.timeSlot}</p>
           <p><b>Venue:</b> ${event.venue}</p>
+          <p><b>Approved by:</b> ${adminEmail}</p>
+          <hr />
+          <p>Please find the attached receipt for your records. You can also download it from your club dashboard.</p>
         `
-      });
+      };
+
+      // Attach PDF if it was generated successfully
+      if (pdfPath) {
+        emailOptions.attachments = [
+          {
+            filename: `receipt_${event.eventName.replace(/\s+/g, "_")}.pdf`,
+            path: pdfPath,
+          },
+        ];
+      }
+
+      await sendEmail(emailOptions);
+      console.log("✅ Approval email sent with receipt attachment");
     } catch (e) {
-      console.error("EMAIL FAILED:", e.message);
+      console.error("❌ EMAIL FAILED:", e.message);
     }
 
     res.json({
       success: true,
       message: "Event approved successfully",
-      event
+      event,
+      receiptGenerated: !!pdfPath,
     });
-  } catch {
+  } catch (err) {
+    console.error("❌ APPROVE EVENT ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to approve event" });
   }
 };
@@ -400,17 +465,18 @@ exports.getAvailableVenues = async (req, res) => {
   try {
     const { date, timeSlot } = req.query;
 
-    // All possible venues
-    const allVenues = [
-      "Audi 1",
-      "Audi 2",
-      "BSN Hall",
-      "Indoor Stadium",
-      "AIML Lab 1",
-      "CSE Lab ",
-      "CSE Lab 2",
-      "PG Lab First Floor",
-    ];
+    // Fetch all venues from all admins dynamically
+    const Admin = require("../model/Admin");
+    const admins = await Admin.find({});
+
+    const allVenuesSet = new Set();
+    admins.forEach(admin => {
+      if (admin.venues && admin.venues.length > 0) {
+        admin.venues.forEach(venue => allVenuesSet.add(venue));
+      }
+    });
+
+    const allVenues = Array.from(allVenuesSet).sort();
 
     // If no date or time provided, return all venues
     if (!date || !timeSlot) {

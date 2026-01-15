@@ -10,11 +10,13 @@ import RegisterEvent from "./components/RegisterEvent";
 import BookingStatus from "./components/BookingStatus";
 import CancelBooking from "./components/CancelBooking";
 import VenueChangeRequest from "./components/VenueChangeRequest";
+import Receipts from "./components/Receipts";
 
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminUserManagement from "./components/AdminUserManagement";
 import AdminEventManagement from "./components/AdminEventManagement";
+import AdminProfile from "./components/AdminProfile";
 
 const VALID_PAGES = [
   "landing",
@@ -26,10 +28,12 @@ const VALID_PAGES = [
   "booking-status",
   "cancel-booking",
   "venue-change-request",
+  "receipts",
   "admin-login",
   "admin-dashboard",
   "admin-user-management",
-  "admin-event-management"
+  "admin-event-management",
+  "admin-profile"
 ];
 
 export default function App() {
@@ -170,6 +174,10 @@ export default function App() {
             <VenueChangeRequest onBack={() => setPage("club-dashboard")} />
           )}
 
+          {page === "receipts" && (
+            <Receipts onBack={() => setPage("club-dashboard")} />
+          )}
+
           {page === "admin-login" && (
             <AdminLogin
               onBack={() => setPage("landing")}
@@ -182,6 +190,7 @@ export default function App() {
               onLogout={handleLogout}
               onUserManagement={() => setPage("admin-user-management")}
               onEventManagement={() => setPage("admin-event-management")}
+              onProfile={() => setPage("admin-profile")}
             />
           )}
 
@@ -197,6 +206,10 @@ export default function App() {
               onBack={() => setPage("admin-dashboard")}
               onLogout={handleLogout}
             />
+          )}
+
+          {page === "admin-profile" && (
+            <AdminProfile onBack={() => setPage("admin-dashboard")} />
           )}
         </motion.div>
       </AnimatePresence>

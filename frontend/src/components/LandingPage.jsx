@@ -6,7 +6,6 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
-  Play,
 } from "lucide-react";
 
 import logo from "../assets/venueverse-logo.jpg";
@@ -15,6 +14,7 @@ import { ENDPOINTS } from "../api";
 export default function LandingPage({ onRoleSelect }) {
   const [activeEvents, setActiveEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
+
 
   useEffect(() => {
     fetchEvents();
@@ -157,9 +157,7 @@ export default function LandingPage({ onRoleSelect }) {
             GET STARTED <ArrowRight size={18} />
           </button>
 
-          <button className="btn btn-outline hover-scale">
-            <Play size={18} /> WATCH OVERVIEW
-          </button>
+
         </div>
       </section>
 
@@ -246,7 +244,7 @@ export default function LandingPage({ onRoleSelect }) {
       </section>
 
       {/* FOOTER CTA */}
-      <section className="footer-cta">
+      <section className="footer-cta" style={{ textAlign: "center" }}>
         <h2 style={{ fontSize: "30px", fontWeight: "700" }}>Ready to get started?</h2>
         <p style={{ color: "var(--text-muted)", maxWidth: "600px", margin: "10px auto" }}>
           Join hundreds of clubs managing their events with VenueVerse.
@@ -260,6 +258,8 @@ export default function LandingPage({ onRoleSelect }) {
           Start Managing Events <ArrowRight size={18} />
         </button>
       </section>
+
+
 
     </div>
   );

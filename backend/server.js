@@ -62,6 +62,7 @@ console.log("📋 Admin router stack:", adminRouter.stack.map(r => ({
 // Events
 app.use("/api/events", require("./routes/eventRoutes"));  // Event lifecycle
 app.use("/api/requests", require("./routes/requestRoutes")); // Venue Change Requests
+app.use("/api/receipts", require("./routes/receiptRoutes")); // Receipts
 
 /* =========================
    HEALTH CHECK
