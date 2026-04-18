@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { ENDPOINTS, getAuthHeaders } from "../api";
+import logo from "../assets/venueverse-logo.jpg"; // ⭐ NEW IMPORT
 
 const FILTERS = {
   APPROVED: "APPROVED",
@@ -148,6 +149,7 @@ export default function AdminEventManagement({ onBack, onLogout }) {
           <button className="back-btn" onClick={onBack}>
             <ArrowLeft size={18} />
           </button>
+          <img src={logo} alt="VenueVerse Logo" className="admin-header-logo-small" style={{ height: "32px", marginRight: "12px", borderRadius: "50%" }} /> {/* ⭐ NEW LOGO */}
           <h1>Event Management</h1>
         </div>
 

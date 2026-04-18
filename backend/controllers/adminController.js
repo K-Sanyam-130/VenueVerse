@@ -711,19 +711,22 @@ exports.getSystemStats = async (req, res) => {
       totalEvents,
       activeEvents, // "Events Going On" (LIVE)
       totalClubs,
-      blockedClubs
+      blockedClubs,
+      pendingEvents // ⭐ NEW VARIABLE
     ] = await Promise.all([
       Event.countDocuments({}),
       Event.countDocuments({ status: "APPROVED", eventType: "LIVE" }),
       User.countDocuments({ role: "club" }),
-      User.countDocuments({ role: "club", isBlocked: true })
+      User.countDocuments({ role: "club", isBlocked: true }),
+      Event.countDocuments({ status: "PENDING" }) // ⭐ NEW: Count pending events
     ]);
 
     res.json({
       totalEvents,
       activeEvents,
       totalUsers: totalClubs,
-      activeUsers: totalClubs - blockedClubs
+      activeUsers: totalClubs - blockedClubs,
+      pendingEvents // ⭐ NEW
     });
   } catch (err) {
     console.error("GET STATS ERROR:", err);
@@ -798,6 +801,84 @@ exports.updateAdminProfile = async (req, res) => {
     });
   }
 };
+
+/* =========================
+   ⭐ ACTIVITY FEED
+========================= */
+exports.getRecentActivity = async (req, res) => {
+  try {
+    const Event = require("../model/Event");
+    const User = require("../model/User");
+
+    // 1. Fetch Request/Events (Created recently)
+    const recentEvents = await Event.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("eventName clubName createdAt status");
+
+    // 2. Fetch recent user registrations
+    const recentUsers = await User.find({ role: "club" })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("name email createdAt");
+
+    // 3. Fetch recent logins (if you tracked them, but for now we'll use registrations/updates)
+    // NOTE: To track logins real-time, we'd need a repetitive login log. 
+    // For now, let's use "Pending Approvals" or "Recent Events" as the main drivers.
+    // Let's rely on Events and Users.
+
+    let activity = [];
+
+    // Map Events
+    recentEvents.forEach(e => {
+      activity.push({
+        action: `Event ${e.status.toLowerCase()}`,
+        user: e.clubName,
+        time: e.createdAt,
+        rawTime: new Date(e.createdAt).getTime(),
+        type: "event"
+      });
+    });
+
+    // Map Users
+    recentUsers.forEach(u => {
+      activity.push({
+        action: "New club registration",
+        user: u.name,
+        time: u.createdAt,
+        rawTime: new Date(u.createdAt).getTime(),
+        type: "user"
+      });
+    });
+
+    // Sort by time descending
+    activity.sort((a, b) => b.rawTime - a.rawTime);
+
+    // Slice top 10
+    const finalActivity = activity.slice(0, 10).map(a => ({
+      ...a,
+      time: timeAgo(a.time) // Helper to format time
+    }));
+
+    res.json({
+      success: true,
+      activity: finalActivity
+    });
+  } catch (err) {
+    console.error("GET ACTIVITY ERROR:", err);
+    res.status(500).json({ success: false, msg: "Failed to fetch activity" });
+  }
+};
+
+// Helper for "time ago"
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
+}
 
 /* =========================
    ⭐ VENUE MANAGEMENT

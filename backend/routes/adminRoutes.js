@@ -23,7 +23,8 @@ const {
    updateAdminProfile,         // ⭐ PROFILE
    getAdminVenues,             // ⭐ VENUE MANAGEMENT
    addVenue,                   // ⭐ VENUE MANAGEMENT
-   removeVenue                 // ⭐ VENUE MANAGEMENT
+   removeVenue,                // ⭐ VENUE MANAGEMENT
+   getRecentActivity           // ⭐ ACTIVITY FEED
 } = require("../controllers/adminController");
 
 /*
@@ -114,6 +115,11 @@ router.put("/profile", auth, updateAdminProfile);
 router.get("/venues", auth, getAdminVenues);
 router.post("/venues", auth, addVenue);
 router.delete("/venues/:venue", auth, removeVenue);
+
+/* =========================
+   ⭐ ACTIVITY FEED
+========================= */
+router.get("/active-feed", auth, getRecentActivity);
 
 console.log("🔍 adminRoutes.js loaded");
 console.log("Routes registered:");

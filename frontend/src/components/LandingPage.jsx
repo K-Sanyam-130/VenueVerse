@@ -11,7 +11,7 @@ import {
 import logo from "../assets/venueverse-logo.jpg";
 import { ENDPOINTS } from "../api";
 
-export default function LandingPage({ onRoleSelect }) {
+export default function LandingPage({ onRoleSelect, user, admin }) {
   const [activeEvents, setActiveEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
 
@@ -102,12 +102,12 @@ export default function LandingPage({ onRoleSelect }) {
             <Users size={16} /> Student
           </button>
 
-          <button className="role-btn" onClick={() => onRoleSelect("club-official")}>
-            <Calendar size={16} /> Club Officials
+          <button className="role-btn" onClick={() => onRoleSelect(user ? "club-dashboard" : "club-official")}>
+            <Calendar size={16} /> {user ? "Club Dashboard" : "Club Officials"}
           </button>
 
-          <button className="role-btn" onClick={() => onRoleSelect("admin")}>
-            <MapPin size={16} /> Admin Portal
+          <button className="role-btn" onClick={() => onRoleSelect(admin ? "admin-dashboard" : "admin")}>
+            <MapPin size={16} /> {admin ? "Admin Dashboard" : "Admin Portal"}
           </button>
         </div>
       </div>
@@ -153,8 +153,8 @@ export default function LandingPage({ onRoleSelect }) {
         </p>
 
         <div style={{ marginTop: "25px", display: "flex", gap: "15px", justifyContent: "center" }}>
-          <button className="btn btn-primary hover-scale" onClick={() => onRoleSelect("club-official")}>
-            GET STARTED <ArrowRight size={18} />
+          <button className="btn btn-primary hover-scale" onClick={() => onRoleSelect(user ? "club-dashboard" : "club-official")}>
+            {user ? "GO TO DASHBOARD" : "GET STARTED"} <ArrowRight size={18} />
           </button>
 
 

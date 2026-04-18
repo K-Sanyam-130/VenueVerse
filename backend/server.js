@@ -47,17 +47,7 @@ app.use("/api/users", require("./routes/userRoutes"));    // Users / Clubs
 app.use("/api/otp", require("./routes/otpRoutes"));       // OTP
 
 // Admin (Dedicated Admin Model)
-app.use("/api/admin", require("./routes/adminRoutes"));   // Admin login + actions
-// Routes
 app.use("/api/admin", require("./routes/adminRoutes"));
-
-// ADD THIS DEBUG CODE
-console.log("✅ Admin routes registered");
-const adminRouter = require("./routes/adminRoutes");
-console.log("📋 Admin router stack:", adminRouter.stack.map(r => ({
-   path: r.route?.path,
-   methods: Object.keys(r.route?.methods || {})
-})));
 
 // Events
 app.use("/api/events", require("./routes/eventRoutes"));  // Event lifecycle

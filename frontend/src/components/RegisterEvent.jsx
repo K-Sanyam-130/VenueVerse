@@ -237,7 +237,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {
             <div className="re-grid-2">
               <div className="re-field">
                 <label>
-                  <User size={16} /> Member Name *
+                  <User size={16} color="white" /> Member Name *
                 </label>
                 <input
                   type="text"
@@ -250,7 +250,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {
 
               <div className="re-field">
                 <label>
-                  <Calendar size={16} /> Event Name *
+                  <Calendar size={16} color="white" /> Event Name *
                 </label>
                 <input
                   type="text"
@@ -266,7 +266,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {
             <div className="re-grid-2">
               <div className="re-field">
                 <label>
-                  <Calendar size={16} /> Event Date *
+                  <Calendar size={16} color="white" /> Event Date *
                 </label>
                 <input
                   type="date"
@@ -280,7 +280,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {
 
               <div className="re-field">
                 <label>
-                  <Clock size={16} /> Time Slot *
+                  <Clock size={16} color="white" /> Time Slot *
                 </label>
                 <select
                   value={formData.timeSlot}
@@ -327,7 +327,7 @@ export default function RegisterEvent({ onBack, onRegistered }) {
             {/* VENUE */}
             <div className="re-field">
               <label>
-                <MapPin size={16} /> Venue
+                <MapPin size={16} color="white" /> Venue
               </label>
               <select
                 value={formData.venue}

@@ -28,11 +28,13 @@ export default function AdminDashboard({
     activeUsers: 0   // Active Clubs
   });
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]); // ⭐ NEW STATE
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
     fetchPendingUsers();
+    fetchActivity(); // ⭐ NEW CALL
   }, []);
 
   const fetchStats = async () => {
@@ -60,6 +62,20 @@ export default function AdminDashboard({
       }
     } catch (err) {
       console.error("Failed to fetch pending users", err);
+    }
+  };
+
+  const fetchActivity = async () => {
+    try {
+      const res = await fetch(`${ENDPOINTS.ADMIN}/active-feed`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentActivity(data.activity || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch activity", err);
     }
   };
 
@@ -146,15 +162,11 @@ export default function AdminDashboard({
     { label: "Total Events", value: dashboardStats.totalEvents, icon: Calendar, color: "cyan" },
     { label: "Events Going On", value: dashboardStats.activeEvents, icon: Activity, color: "lime" },
     { label: "Club Officials", value: dashboardStats.totalUsers, icon: UserCheck, color: "amber" },
-    { label: "Pending Approvals", value: pendingUsers.length, icon: AlertTriangle, color: "pink" },
+    { label: "Pending Approvals", value: pendingUsers.length + (dashboardStats.pendingEvents || 0), icon: AlertTriangle, color: "pink" },
   ];
 
-  const recentActivity = [
-    { action: "New event created", user: "John Smith", time: "2 hours ago" },
-    { action: "User registration", user: "Sarah Johnson", time: "4 hours ago" },
-    { action: "Event cancelled", user: "Mike Chen", time: "6 hours ago" },
-    { action: "System backup completed", user: "System", time: "8 hours ago" },
-  ];
+  // REMOVED HARDCODED DATA
+  // const recentActivity = [ ... ]
 
   const systemAlerts = [
     {

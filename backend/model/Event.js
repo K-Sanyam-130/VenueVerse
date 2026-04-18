@@ -41,7 +41,7 @@ const eventSchema = new mongoose.Schema(
 
     eventType: {
       type: String,
-      enum: ["LIVE", "UPCOMING"],
+      enum: ["LIVE", "UPCOMING", "PAST"],
       default: "UPCOMING",
     },
 

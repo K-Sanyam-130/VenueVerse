@@ -54,13 +54,13 @@ export default function App() {
 
       if (savedUser && token) {
         setUser(JSON.parse(savedUser));
-        setPage("club-dashboard");
+        // setPage("club-dashboard"); // REMOVED: Stay on Landing Page
         return;
       }
 
       if (savedAdmin && adminToken) {
         setAdmin(JSON.parse(savedAdmin));
-        setPage("admin-dashboard");
+        // setPage("admin-dashboard"); // REMOVED: Stay on Landing Page
       }
     } catch {
       setPage("landing");
@@ -71,6 +71,8 @@ export default function App() {
     if (role === "student") setPage("student-login");
     else if (role === "club-official") setPage("club-login");
     else if (role === "admin") setPage("admin-login");
+    else if (role === "club-dashboard") setPage("club-dashboard"); // ⭐ Allow direct nav
+    else if (role === "admin-dashboard") setPage("admin-dashboard"); // ⭐ Allow direct nav
   };
 
   const handleStudentSubmit = (usn) => {
@@ -126,7 +128,7 @@ export default function App() {
           transition={{ duration: 0.3 }}
           style={{ width: "100%" }}
         >
-          {page === "landing" && <LandingPage onRoleSelect={handleRoleSelect} />}
+          {page === "landing" && <LandingPage onRoleSelect={handleRoleSelect} user={user} admin={admin} />}
 
           {page === "student-login" && (
             <StudentLogin
@@ -138,7 +140,7 @@ export default function App() {
           {page === "existing-events" && (
             <ExistingEvents
               onBack={() =>
-                studentUSN ? setPage("student-login") : setPage("club-dashboard")
+                user ? setPage("club-dashboard") : setPage("landing")
               }
             />
           )}
